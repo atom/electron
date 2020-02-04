@@ -88,7 +88,8 @@ void Browser::Focus() {
   // Focus on the first visible window.
   for (auto* const window : WindowList::GetWindows()) {
     if (window->IsVisible()) {
-      window->Focus(true);
+      FocusOptions focusOptions;
+      window->Focus(focusOptions);
       break;
     }
   }
