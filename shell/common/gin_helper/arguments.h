@@ -6,6 +6,7 @@
 #define SHELL_COMMON_GIN_HELPER_ARGUMENTS_H_
 
 #include "gin/arguments.h"
+#include "shell/common/gin_helper/v8_type_traits.h"
 
 namespace gin_helper {
 
@@ -18,31 +19,52 @@ class Arguments : public gin::Arguments {
   // |next_| counter no matter whether the conversion succeeds.
   template <typename T>
   bool GetNext(T* out) {
-    v8::Local<v8::Value> val = PeekNext();
-    if (val.IsEmpty())
+    if (is_for_property_ || next_ >= info_for_function_->Length()) {
+      insufficient_arguments_ = true;
       return false;
+    }
+    v8::Local<v8::Value> val = (*info_for_function_)[next_];
     if (!gin::ConvertFromV8(isolate(), val, out))
       return false;
-    Skip();
+    ++next_;
     return true;
   }
 
   // Gin always returns true when converting V8 value to boolean, we do not want
   // this behavior when parsing parameters.
   bool GetNext(bool* out) {
-    v8::Local<v8::Value> val = PeekNext();
+    if (is_for_property_ || next_ >= info_for_function_->Length()) {
+      insufficient_arguments_ = true;
+      return false;
+    }
+    v8::Local<v8::Value> val = (*info_for_function_)[next_];
     if (val.IsEmpty() || !val->IsBoolean())
       return false;
     *out = val->BooleanValue(isolate());
-    Skip();
+    ++next_;
     return true;
   }
 
-  // Throw error with custom error message.
+  // Throw arguments error.
   void ThrowError() const;
+
+  // Throw arguments error with expected type information.
+  template <typename T>
+  void ThrowErrorWithExpectedType() const {
+    if (is_for_property_ || insufficient_arguments_ ||
+        !V8TypeTraits<T>::has_type_name) {
+      ThrowError();
+      return;
+    }
+    ThrowErrorWithExpectedTypeName(V8TypeTraits<T>::type_name);
+  }
+
+  // Throw error with custom error message.
   void ThrowError(base::StringPiece message) const;
 
  private:
+  void ThrowErrorWithExpectedTypeName(const char* type_name) const;
+
   // MUST NOT ADD ANY DATA MEMBER.
 };
 
