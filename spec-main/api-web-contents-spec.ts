@@ -766,10 +766,10 @@ describe('webContents module', () => {
     });
   });
 
-  describe('focus()', () => {
-    describe('when the web contents is hidden', () => {
+  describe('focus APIs', () => {
+    describe('focus()', () => {
       afterEach(closeAllWindows);
-      it('does not blur the focused window', async () => {
+      it('does not blur the focused window when the web contents is hidden', async () => {
         const w = new BrowserWindow({ show: false, webPreferences: { nodeIntegration: true } });
         w.show();
         await w.loadURL('about:blank');
@@ -782,6 +782,35 @@ describe('webContents module', () => {
         child.close();
         expect(currentFocused).to.be.true();
         expect(childFocused).to.be.false();
+      });
+    });
+
+    describe('focus event', () => {
+      afterEach(closeAllWindows);
+      it('is triggered when web contents is focused', async () => {
+        const w = new BrowserWindow({ show: false });
+        await w.loadURL('about:blank');
+        const devToolsOpened = emittedOnce(w.webContents, 'devtools-opened');
+        w.webContents.openDevTools();
+        await devToolsOpened;
+        w.webContents.devToolsWebContents!.focus();
+        const focusPromise = emittedOnce(w.webContents, 'focus');
+        w.webContents.focus();
+        await expect(focusPromise).to.eventually.be.fulfilled();
+      });
+    });
+
+    describe('blur event', () => {
+      afterEach(closeAllWindows);
+      it('is triggered when web contents is blurred', async () => {
+        const w = new BrowserWindow({ show: false });
+        await w.loadURL('about:blank');
+        const blurPromise = emittedOnce(w.webContents, 'blur');
+        const devToolsOpened = emittedOnce(w.webContents, 'devtools-opened');
+        w.webContents.openDevTools();
+        await devToolsOpened;
+        w.webContents.devToolsWebContents!.focus();
+        await expect(blurPromise).to.eventually.be.fulfilled();
       });
     });
   });
