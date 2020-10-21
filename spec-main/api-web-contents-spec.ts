@@ -798,6 +798,27 @@ describe('webContents module', () => {
         w.webContents.focus();
         await expect(focusPromise).to.eventually.be.fulfilled();
       });
+
+      it('is triggered when BrowserWindow is focused', async () => {
+        const window1 = new BrowserWindow({ show: false });
+        const window2 = new BrowserWindow({ show: false });
+
+        await Promise.all([
+          window1.loadURL('about:blank'),
+          window2.loadURL('about:blank')
+        ]);
+
+        window1.show();
+        window2.show();
+
+        let focusPromise = emittedOnce(window1.webContents, 'focus');
+        window1.focus();
+        await expect(focusPromise).to.eventually.be.fulfilled();
+
+        focusPromise = emittedOnce(window2.webContents, 'focus');
+        window2.focus();
+        await expect(focusPromise).to.eventually.be.fulfilled();
+      });
     });
 
     describe('blur event', () => {
