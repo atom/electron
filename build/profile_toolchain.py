@@ -63,16 +63,6 @@ def windows_installed_software():
         stdout=subprocess.PIPE,
     )
 
-    stdout, _ = proc.communicate("Get-Module -ListAvailable".encode("utf-8"))
-
-    print(stdout.decode("utf-8"))
-
-    proc = subprocess.Popen(
-        ["powershell.exe", "-Command", "-"],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-    )
-
     stdout, _ = proc.communicate(" ".join(powershell_command).encode("utf-8"))
 
     if proc.returncode != 0:
