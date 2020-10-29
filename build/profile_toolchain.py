@@ -36,6 +36,7 @@ def calculate_hash(root):
 
 def windows_installed_software():
     powershell_command = [
+        "Remove-Module psreadline;",
         "Get-CimInstance",
         "-Namespace",
         "root\cimv2",
