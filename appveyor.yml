@@ -47,7 +47,6 @@ notifications:
     on_build_failure: true
     on_build_status_changed: false
 build_script:
-  - ps: Remove-Module psreadline
   - ps: >-
       if(($env:APPVEYOR_PULL_REQUEST_HEAD_REPO_NAME -split "/")[0] -eq ($env:APPVEYOR_REPO_NAME -split "/")[0]) {
         Write-warning "Skipping PR build for branch"; Exit-AppveyorBuild
