@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals
 
 import contextlib
 import sys
@@ -62,18 +62,32 @@ def windows_installed_software():
         stdout=subprocess.PIPE,
     )
 
+    stdout, _ = proc.communicate("Get-Module -ListAvailable".encode("utf-8"))
+
+    print(stdout.decode("utf-8"))
+
+    proc = subprocess.Popen(
+        ["powershell.exe", "-Command", "-"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    )
+
     stdout, _ = proc.communicate(" ".join(powershell_command).encode("utf-8"))
 
     if proc.returncode != 0:
         raise RuntimeError("Failed to get list of installed software")
 
     # Filter out missing keys
-    return list(
-        map(
-            lambda info: {k: info[k] for k in info if info[k]},
-            json.loads(stdout.decode("utf-8")),
+    try:
+        return list(
+            map(
+                lambda info: {k: info[k] for k in info if info[k]},
+                json.loads(stdout.decode("utf-8")),
+            )
         )
-    )
+    except Exception as e:
+        print(stdout.decode("utf-8"))
+        raise e
 
 
 def windows_profile():
