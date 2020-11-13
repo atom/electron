@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: sentialx <sentialx@gmail.com>
+Date: Tue, 10 Nov 2020 21:23:30 +0100
+Subject: fix: disable COOP process swap for <webview>
+
+Guest WebContents don't support swapping BrowsingInstance, which COOP tries to trigger, hence the crash on i.e. twitter.com.
+
+diff --git a/content/browser/renderer_host/cross_origin_opener_policy_status.cc b/content/browser/renderer_host/cross_origin_opener_policy_status.cc
+index 3296a4c90e208dd5885fc83d6d93765e9463e7ba..fdc82fdcf87726595359c11ebd99f3b84a266555 100644
+--- a/content/browser/renderer_host/cross_origin_opener_policy_status.cc
++++ b/content/browser/renderer_host/cross_origin_opener_policy_status.cc
+@@ -177,7 +177,8 @@ CrossOriginOpenerPolicyStatus::EnforceCOOP(
+           is_initial_navigation_, response_coop.value, response_origin);
+ 
+   if (cross_origin_policy_swap) {
+-    require_browsing_instance_swap_ = true;
++    require_browsing_instance_swap_ =
++        !frame_tree_node_->current_frame_host()->ParentOrOuterDelegateFrame();
+ 
+     // If this response's COOP causes a BrowsingInstance swap that severs an
+     // opener, report this to the previous COOP reporter and/or the COOP
