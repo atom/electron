@@ -577,6 +577,31 @@ WebContents.prototype._init = function () {
     ipcMain.emit(channel, event, message);
   });
 
+  const handleCustomErrorPageEvent = (eventName: string) => {
+    this.on(`-${eventName}` as any, function (this: any, event: any, ...args: any[]) {
+      let allowReturnValue = true;
+      Object.defineProperty(event, 'returnValue', {
+        set: (value) => {
+          if (!allowReturnValue) return;
+
+          if (typeof value !== 'object' || !value) { throw new TypeError(`event.returnValue must be set to a non-null object, was set to a "${typeof value}"`); }
+          if (typeof value.errorCode !== 'number') { throw new TypeError(`event.returnValue.errorCode must be set to a number, was set to a "${typeof value.errorCode}"`); }
+          if (value.errorCode >= 0) { throw new TypeError(`event.returnValue.errorCode must be negative, was set to "${value.errorCode}"`); }
+          if (value.errorPage && typeof value.errorPage !== 'string') { throw new TypeError(`event.returnValue.errorPage must be set to a string if provided, was set to a "${typeof value.errorPage}"`); }
+          if (typeof value.errorPage === 'string' && value.errorPage.length === 0) { throw new Error('event.returnValue.errorPage must be a non-empty string, an empty string was provided'); }
+          if (value.errorPage && value.errorCode === -3) { throw new Error('event.returnValue.errorCode can not be set to "-2" when an errorPage is provided'); }
+          event.preventDefault();
+          event.sendReply(value);
+        },
+        get: () => {}
+      });
+      this.emit(eventName, event, ...args);
+      allowReturnValue = false;
+    });
+  };
+  handleCustomErrorPageEvent('will-navigate');
+  handleCustomErrorPageEvent('will-fail-load');
+
   // Handle context menu action request from pepper plugin.
   this.on('pepper-context-menu' as any, function (event: any, params: {x: number, y: number, menu: Array<(MenuItemConstructorOptions) | (MenuItem)>}, callback: () => void) {
     // Access Menu via electron.Menu to prevent circular require.

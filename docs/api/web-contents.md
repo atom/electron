@@ -57,6 +57,25 @@ Process: [Main](../glossary.md#main-process)
 Emitted when the navigation is done, i.e. the spinner of the tab has stopped
 spinning, and the `onload` event was dispatched.
 
+#### Event: 'will-fail-load' _Experimental_
+
+Returns:
+
+* `event` [CancellableNavigationEvent](structures/cancellable-navigation-event.md)
+* `url` String
+* `isInPlace` Boolean
+* `isMainFrame` Boolean
+* `frameProcessId` Integer
+* `frameRoutingId` Integer
+* `errorCode` Integer
+* `errorDescription` String
+
+This event will be emitted after `did-start-loading` and always before the
+`did-fail-load` event for the same navigation.
+
+Settings `event.returnValue` to the appropriate object will result in a custom error page being
+displayed using custom HTML.
+
 #### Event: 'did-fail-load'
 
 Returns:
@@ -224,11 +243,11 @@ Not emitted if the creation of the window is canceled from
 
 See [`window.open()`](window-open.md) for more details and how to use this in conjunction with `webContents.setWindowOpenHandler`.
 
-#### Event: 'will-navigate'
+#### Event: 'will-navigate' _Experimental_
 
 Returns:
 
-* `event` Event
+* `event` [CancellableNavigationEvent](structures/cancellable-navigation-event.md)
 * `url` String
 
 Emitted when a user or the page wants to start navigation. It can happen when
@@ -242,6 +261,9 @@ or updating the `window.location.hash`. Use `did-navigate-in-page` event for
 this purpose.
 
 Calling `event.preventDefault()` will prevent the navigation.
+
+Settings `event.returnValue` to the appropriate object will result in a custom error page being
+displayed using custom HTML and the navigation being cancelled.
 
 #### Event: 'did-start-navigation'
 
