@@ -16,7 +16,7 @@
 #include "base/win/win_util.h"
 #endif
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
 #include <mach/mach.h>
 #include "base/process/port_provider_mac.h"
 #include "content/public/browser/browser_child_process_host.h"
@@ -46,16 +46,18 @@ base::Optional<mach_task_basic_info_data_t> GetTaskInfo(mach_port_t task) {
 
 }  // namespace
 
-#endif  // defined(OS_MACOSX)
+#endif  // defined(OS_MAC)
 
 namespace electron {
 
 ProcessMetric::ProcessMetric(int type,
                              base::ProcessHandle handle,
                              std::unique_ptr<base::ProcessMetrics> metrics,
+                             const std::string& service_name,
                              const std::string& name) {
   this->type = type;
   this->metrics = std::move(metrics);
+  this->service_name = service_name;
   this->name = name;
 
 #if defined(OS_WIN)
@@ -90,7 +92,7 @@ ProcessMemoryInfo ProcessMetric::GetMemoryInfo() const {
 ProcessIntegrityLevel ProcessMetric::GetIntegrityLevel() const {
   HANDLE token = nullptr;
   if (!::OpenProcessToken(process.Handle(), TOKEN_QUERY, &token)) {
-    return ProcessIntegrityLevel::Unknown;
+    return ProcessIntegrityLevel::kUnknown;
   }
 
   base::win::ScopedHandle token_scoped(token);
@@ -99,15 +101,15 @@ ProcessIntegrityLevel ProcessMetric::GetIntegrityLevel() const {
   if (::GetTokenInformation(token, TokenIntegrityLevel, nullptr, 0,
                             &token_info_length) ||
       ::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
-    return ProcessIntegrityLevel::Unknown;
+    return ProcessIntegrityLevel::kUnknown;
   }
 
   auto token_label_bytes = std::make_unique<char[]>(token_info_length);
-  TOKEN_MANDATORY_LABEL* token_label =
+  auto* token_label =
       reinterpret_cast<TOKEN_MANDATORY_LABEL*>(token_label_bytes.get());
   if (!::GetTokenInformation(token, TokenIntegrityLevel, token_label,
                              token_info_length, &token_info_length)) {
-    return ProcessIntegrityLevel::Unknown;
+    return ProcessIntegrityLevel::kUnknown;
   }
 
   DWORD integrity_level = *::GetSidSubAuthority(
@@ -117,34 +119,34 @@ ProcessIntegrityLevel ProcessMetric::GetIntegrityLevel() const {
 
   if (integrity_level >= SECURITY_MANDATORY_UNTRUSTED_RID &&
       integrity_level < SECURITY_MANDATORY_LOW_RID) {
-    return ProcessIntegrityLevel::Untrusted;
+    return ProcessIntegrityLevel::kUntrusted;
   }
 
   if (integrity_level >= SECURITY_MANDATORY_LOW_RID &&
       integrity_level < SECURITY_MANDATORY_MEDIUM_RID) {
-    return ProcessIntegrityLevel::Low;
+    return ProcessIntegrityLevel::kLow;
   }
 
   if (integrity_level >= SECURITY_MANDATORY_MEDIUM_RID &&
       integrity_level < SECURITY_MANDATORY_HIGH_RID) {
-    return ProcessIntegrityLevel::Medium;
+    return ProcessIntegrityLevel::kMedium;
   }
 
   if (integrity_level >= SECURITY_MANDATORY_HIGH_RID &&
       integrity_level < SECURITY_MANDATORY_SYSTEM_RID) {
-    return ProcessIntegrityLevel::High;
+    return ProcessIntegrityLevel::kHigh;
   }
 
-  return ProcessIntegrityLevel::Unknown;
+  return ProcessIntegrityLevel::kUnknown;
 }
 
 // static
 bool ProcessMetric::IsSandboxed(ProcessIntegrityLevel integrity_level) {
-  return integrity_level > ProcessIntegrityLevel::Unknown &&
-         integrity_level < ProcessIntegrityLevel::Medium;
+  return integrity_level > ProcessIntegrityLevel::kUnknown &&
+         integrity_level < ProcessIntegrityLevel::kMedium;
 }
 
-#elif defined(OS_MACOSX)
+#elif defined(OS_MAC)
 
 ProcessMemoryInfo ProcessMetric::GetMemoryInfo() const {
   ProcessMemoryInfo result;
@@ -165,6 +167,6 @@ bool ProcessMetric::IsSandboxed() const {
 #endif
 }
 
-#endif  // defined(OS_MACOSX)
+#endif  // defined(OS_MAC)
 
 }  // namespace electron

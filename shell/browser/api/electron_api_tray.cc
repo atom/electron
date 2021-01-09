@@ -14,6 +14,7 @@
 #include "shell/browser/browser.h"
 #include "shell/browser/javascript_environment.h"
 #include "shell/common/api/electron_api_native_image.h"
+#include "shell/common/gin_converters/file_path_converter.h"
 #include "shell/common/gin_converters/gfx_converter.h"
 #include "shell/common/gin_converters/guid_converter.h"
 #include "shell/common/gin_converters/image_converter.h"
@@ -33,19 +34,19 @@ struct Converter<electron::TrayIcon::IconType> {
     std::string mode;
     if (ConvertFromV8(isolate, val, &mode)) {
       if (mode == "none") {
-        *out = IconType::None;
+        *out = IconType::kNone;
         return true;
       } else if (mode == "info") {
-        *out = IconType::Info;
+        *out = IconType::kInfo;
         return true;
       } else if (mode == "warning") {
-        *out = IconType::Warning;
+        *out = IconType::kWarning;
         return true;
       } else if (mode == "error") {
-        *out = IconType::Error;
+        *out = IconType::kError;
         return true;
       } else if (mode == "custom") {
-        *out = IconType::Custom;
+        *out = IconType::kCustom;
         return true;
       }
     }
@@ -61,11 +62,11 @@ namespace api {
 
 gin::WrapperInfo Tray::kWrapperInfo = {gin::kEmbedderNativeGin};
 
-Tray::Tray(gin::Handle<NativeImage> image,
-           base::Optional<UUID> guid,
-           gin::Arguments* args)
+Tray::Tray(v8::Isolate* isolate,
+           v8::Local<v8::Value> image,
+           base::Optional<UUID> guid)
     : tray_icon_(TrayIcon::Create(guid)) {
-  SetImage(image);
+  SetImage(isolate, image);
   tray_icon_->AddObserver(this);
 }
 
@@ -73,7 +74,7 @@ Tray::~Tray() = default;
 
 // static
 gin::Handle<Tray> Tray::New(gin_helper::ErrorThrower thrower,
-                            gin::Handle<NativeImage> image,
+                            v8::Local<v8::Value> image,
                             base::Optional<UUID> guid,
                             gin::Arguments* args) {
   if (!Browser::Get()->is_ready()) {
@@ -88,7 +89,8 @@ gin::Handle<Tray> Tray::New(gin_helper::ErrorThrower thrower,
   }
 #endif
 
-  return gin::CreateHandle(thrower.isolate(), new Tray(image, guid, args));
+  return gin::CreateHandle(thrower.isolate(),
+                           new Tray(args->isolate(), image, guid));
 }
 
 void Tray::OnClicked(const gfx::Rect& bounds,
@@ -186,23 +188,34 @@ bool Tray::IsDestroyed() {
   return !tray_icon_;
 }
 
-void Tray::SetImage(gin::Handle<NativeImage> image) {
+void Tray::SetImage(v8::Isolate* isolate, v8::Local<v8::Value> image) {
   if (!CheckAlive())
     return;
+
+  NativeImage* native_image = nullptr;
+  if (!NativeImage::TryConvertNativeImage(isolate, image, &native_image))
+    return;
+
 #if defined(OS_WIN)
-  tray_icon_->SetImage(image->GetHICON(GetSystemMetrics(SM_CXSMICON)));
+  tray_icon_->SetImage(native_image->GetHICON(GetSystemMetrics(SM_CXSMICON)));
 #else
-  tray_icon_->SetImage(image->image());
+  tray_icon_->SetImage(native_image->image());
 #endif
 }
 
-void Tray::SetPressedImage(gin::Handle<NativeImage> image) {
+void Tray::SetPressedImage(v8::Isolate* isolate, v8::Local<v8::Value> image) {
   if (!CheckAlive())
     return;
+
+  NativeImage* native_image = nullptr;
+  if (!NativeImage::TryConvertNativeImage(isolate, image, &native_image))
+    return;
+
 #if defined(OS_WIN)
-  tray_icon_->SetPressedImage(image->GetHICON(GetSystemMetrics(SM_CXSMICON)));
+  tray_icon_->SetPressedImage(
+      native_image->GetHICON(GetSystemMetrics(SM_CXSMICON)));
 #else
-  tray_icon_->SetPressedImage(image->image());
+  tray_icon_->SetPressedImage(native_image->image());
 #endif
 }
 
@@ -212,18 +225,40 @@ void Tray::SetToolTip(const std::string& tool_tip) {
   tray_icon_->SetToolTip(tool_tip);
 }
 
-void Tray::SetTitle(const std::string& title) {
+void Tray::SetTitle(const std::string& title,
+                    const base::Optional<gin_helper::Dictionary>& options,
+                    gin::Arguments* args) {
   if (!CheckAlive())
     return;
-#if defined(OS_MACOSX)
-  tray_icon_->SetTitle(title);
+#if defined(OS_MAC)
+  TrayIcon::TitleOptions title_options;
+  if (options) {
+    if (options->Get("fontType", &title_options.font_type)) {
+      // Validate the font type if it's passed in
+      if (title_options.font_type != "monospaced" &&
+          title_options.font_type != "monospacedDigit") {
+        args->ThrowTypeError(
+            "fontType must be one of 'monospaced' or 'monospacedDigit'");
+        return;
+      }
+    } else if (options->Has("fontType")) {
+      args->ThrowTypeError(
+          "fontType must be one of 'monospaced' or 'monospacedDigit'");
+      return;
+    }
+  } else if (args->Length() >= 2) {
+    args->ThrowTypeError("setTitle options must be an object");
+    return;
+  }
+
+  tray_icon_->SetTitle(title, title_options);
 #endif
 }
 
 std::string Tray::GetTitle() {
   if (!CheckAlive())
     return std::string();
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   return tray_icon_->GetTitle();
 #else
   return "";
@@ -233,7 +268,7 @@ std::string Tray::GetTitle() {
 void Tray::SetIgnoreDoubleClickEvents(bool ignore) {
   if (!CheckAlive())
     return;
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   tray_icon_->SetIgnoreDoubleClickEvents(ignore);
 #endif
 }
@@ -241,7 +276,7 @@ void Tray::SetIgnoreDoubleClickEvents(bool ignore) {
 bool Tray::GetIgnoreDoubleClickEvents() {
   if (!CheckAlive())
     return false;
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   return tray_icon_->GetIgnoreDoubleClickEvents();
 #else
   return false;
@@ -260,14 +295,20 @@ void Tray::DisplayBalloon(gin_helper::ErrorThrower thrower,
     return;
   }
 
-  gin::Handle<NativeImage> icon;
-  options.Get("icon", &icon);
+  v8::Local<v8::Value> icon_value;
+  NativeImage* icon = nullptr;
+  if (options.Get("icon", &icon_value) &&
+      !NativeImage::TryConvertNativeImage(thrower.isolate(), icon_value,
+                                          &icon)) {
+    return;
+  }
+
   options.Get("iconType", &balloon_options.icon_type);
   options.Get("largeIcon", &balloon_options.large_icon);
   options.Get("noSound", &balloon_options.no_sound);
   options.Get("respectQuietTime", &balloon_options.respect_quiet_time);
 
-  if (!icon.IsEmpty()) {
+  if (icon) {
 #if defined(OS_WIN)
     balloon_options.icon = icon->GetHICON(
         GetSystemMetrics(balloon_options.large_icon ? SM_CXICON : SM_CXSMICON));

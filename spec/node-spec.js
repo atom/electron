@@ -122,7 +122,7 @@ describe('node feature', () => {
         });
         await emittedOnce(child.stdout, 'close');
         expect(JSON.parse(output)).to.deep.equal({
-          processLog: process.platform === 'win32' ? 'function' : 'undefined',
+          stdoutType: 'pipe',
           processType: 'undefined',
           window: 'undefined'
         });
@@ -171,6 +171,15 @@ describe('node feature', () => {
         fs.readFile(__filename, () => {
           throw error;
         });
+      });
+    });
+
+    describe('URL handling in the renderer process', () => {
+      it('can successfully handle WHATWG URLs constructed by Blink', () => {
+        const url = new URL('file://' + path.resolve(fixtures, 'pages', 'base-page.html'));
+        expect(() => {
+          fs.createReadStream(url);
+        }).to.not.throw();
       });
     });
 

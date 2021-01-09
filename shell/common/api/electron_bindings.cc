@@ -5,7 +5,6 @@
 #include "shell/common/api/electron_bindings.h"
 
 #include <algorithm>
-#include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -34,14 +33,12 @@
 namespace electron {
 
 ElectronBindings::ElectronBindings(uv_loop_t* loop) {
-  uv_async_init(loop, &call_next_tick_async_, OnCallNextTick);
-  call_next_tick_async_.data = this;
+  uv_async_init(loop, call_next_tick_async_.get(), OnCallNextTick);
+  call_next_tick_async_.get()->data = this;
   metrics_ = base::ProcessMetrics::CreateCurrentProcessMetrics();
 }
 
-ElectronBindings::~ElectronBindings() {
-  uv_close(reinterpret_cast<uv_handle_t*>(&call_next_tick_async_), nullptr);
-}
+ElectronBindings::~ElectronBindings() {}
 
 // static
 void ElectronBindings::BindProcess(v8::Isolate* isolate,
@@ -50,7 +47,6 @@ void ElectronBindings::BindProcess(v8::Isolate* isolate,
   // These bindings are shared between sandboxed & unsandboxed renderers
   process->SetMethod("crash", &Crash);
   process->SetMethod("hang", &Hang);
-  process->SetMethod("log", &Log);
   process->SetMethod("getCreationTime", &GetCreationTime);
   process->SetMethod("getHeapStatistics", &GetHeapStatistics);
   process->SetMethod("getBlinkMemoryInfo", &GetBlinkMemoryInfo);
@@ -107,30 +103,21 @@ void ElectronBindings::ActivateUVLoop(v8::Isolate* isolate) {
     return;
 
   pending_next_ticks_.push_back(env);
-  uv_async_send(&call_next_tick_async_);
+  uv_async_send(call_next_tick_async_.get());
 }
 
 // static
 void ElectronBindings::OnCallNextTick(uv_async_t* handle) {
-  ElectronBindings* self = static_cast<ElectronBindings*>(handle->data);
-  for (std::list<node::Environment*>::const_iterator it =
-           self->pending_next_ticks_.begin();
-       it != self->pending_next_ticks_.end(); ++it) {
-    node::Environment* env = *it;
+  auto* self = static_cast<ElectronBindings*>(handle->data);
+  for (auto* env : self->pending_next_ticks_) {
     gin_helper::Locker locker(env->isolate());
     v8::Context::Scope context_scope(env->context());
     v8::HandleScope handle_scope(env->isolate());
-    node::InternalCallbackScope scope(env, v8::Object::New(env->isolate()),
-                                      {0, 0},
-                                      node::InternalCallbackScope::kNoFlags);
+    node::CallbackScope scope(env->isolate(), v8::Object::New(env->isolate()),
+                              {0, 0});
   }
 
   self->pending_next_ticks_.clear();
-}
-
-// static
-void ElectronBindings::Log(const base::string16& message) {
-  std::cout << message << std::flush;
 }
 
 // static
@@ -209,7 +196,7 @@ v8::Local<v8::Value> ElectronBindings::GetSystemMemoryInfo(
   dict.Set("free", free);
 
   // NB: These return bogus values on macOS
-#if !defined(OS_MACOSX)
+#if !defined(OS_MAC)
   dict.Set("swapTotal", mem_info.swap_total);
   dict.Set("swapFree", mem_info.swap_free);
 #endif

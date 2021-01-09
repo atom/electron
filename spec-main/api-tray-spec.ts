@@ -19,10 +19,10 @@ describe('tray module', () => {
       const badPath = path.resolve('I', 'Do', 'Not', 'Exist');
       expect(() => {
         tray = new Tray(badPath);
-      }).to.throw(/Error processing argument at index 0/);
+      }).to.throw(/Failed to load image from path (.+)/);
     });
 
-    ifit(process.platform === 'win32')('throws a descriptive error if an invlaid guid is given', () => {
+    ifit(process.platform === 'win32')('throws a descriptive error if an invalid guid is given', () => {
       expect(() => {
         tray = new Tray(nativeImage.createEmpty(), 'I am not a guid');
       }).to.throw('Invalid GUID format');
@@ -132,14 +132,49 @@ describe('tray module', () => {
   });
 
   describe('tray.setImage(image)', () => {
+    it('throws a descriptive error for a missing file', () => {
+      const badPath = path.resolve('I', 'Do', 'Not', 'Exist');
+      expect(() => {
+        tray.setImage(badPath);
+      }).to.throw(/Failed to load image from path (.+)/);
+    });
+
     it('accepts empty image', () => {
       tray.setImage(nativeImage.createEmpty());
     });
   });
 
   describe('tray.setPressedImage(image)', () => {
+    it('throws a descriptive error for a missing file', () => {
+      const badPath = path.resolve('I', 'Do', 'Not', 'Exist');
+      expect(() => {
+        tray.setPressedImage(badPath);
+      }).to.throw(/Failed to load image from path (.+)/);
+    });
+
     it('accepts empty image', () => {
       tray.setPressedImage(nativeImage.createEmpty());
+    });
+  });
+
+  ifdescribe(process.platform === 'win32')('tray.displayBalloon(image)', () => {
+    it('throws a descriptive error for a missing file', () => {
+      const badPath = path.resolve('I', 'Do', 'Not', 'Exist');
+      expect(() => {
+        tray.displayBalloon({
+          title: 'title',
+          content: 'wow content',
+          icon: badPath
+        });
+      }).to.throw(/Failed to load image from path (.+)/);
+    });
+
+    it('accepts an empty image', () => {
+      tray.displayBalloon({
+        title: 'title',
+        content: 'wow content',
+        icon: nativeImage.createEmpty()
+      });
     });
   });
 
@@ -158,6 +193,37 @@ describe('tray module', () => {
       const newTitle = tray.getTitle();
 
       expect(newTitle).to.equal(title);
+    });
+
+    it('can have an options object passed in', () => {
+      expect(() => {
+        tray.setTitle('Hello World!', {});
+      }).to.not.throw();
+    });
+
+    it('throws when the options parameter is not an object', () => {
+      expect(() => {
+        tray.setTitle('Hello World!', 'test' as any);
+      }).to.throw(/setTitle options must be an object/);
+    });
+
+    it('can have a font type option set', () => {
+      expect(() => {
+        tray.setTitle('Hello World!', { fontType: 'monospaced' });
+        tray.setTitle('Hello World!', { fontType: 'monospacedDigit' });
+      }).to.not.throw();
+    });
+
+    it('throws when the font type is specified but is not a string', () => {
+      expect(() => {
+        tray.setTitle('Hello World!', { fontType: 5.4 as any });
+      }).to.throw(/fontType must be one of 'monospaced' or 'monospacedDigit'/);
+    });
+
+    it('throws on invalid font types', () => {
+      expect(() => {
+        tray.setTitle('Hello World!', { fontType: 'blep' as any });
+      }).to.throw(/fontType must be one of 'monospaced' or 'monospacedDigit'/);
     });
   });
 });

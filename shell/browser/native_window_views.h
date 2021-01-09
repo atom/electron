@@ -11,7 +11,9 @@
 #include <set>
 #include <string>
 #include <tuple>
+#include <vector>
 
+#include "shell/common/api/api.mojom.h"
 #include "ui/views/widget/widget_observer.h"
 
 #if defined(OS_WIN)
@@ -101,6 +103,7 @@ class NativeWindowViews : public NativeWindow,
   bool IsSimpleFullScreen() override;
   void SetKiosk(bool kiosk) override;
   bool IsKiosk() override;
+  bool IsTabletMode() const override;
   void SetBackgroundColor(SkColor color) override;
   void SetHasShadow(bool has_shadow) override;
   bool HasShadow() override;
@@ -123,9 +126,12 @@ class NativeWindowViews : public NativeWindow,
   void SetMenuBarVisibility(bool visible) override;
   bool IsMenuBarVisible() override;
 
-  void SetVisibleOnAllWorkspaces(bool visible) override;
+  void SetVisibleOnAllWorkspaces(bool visible,
+                                 bool visibleOnFullScreen) override;
 
   bool IsVisibleOnAllWorkspaces() override;
+
+  void SetGTKDarkThemeEnabled(bool use_dark_theme) override;
 
   content::DesktopMediaID GetDesktopMediaID() const override;
   gfx::AcceleratedWidget GetAcceleratedWidget() const override;
@@ -134,7 +140,8 @@ class NativeWindowViews : public NativeWindow,
   gfx::Rect ContentBoundsToWindowBounds(const gfx::Rect& bounds) const override;
   gfx::Rect WindowBoundsToContentBounds(const gfx::Rect& bounds) const override;
 
-  void UpdateDraggableRegions(std::unique_ptr<SkRegion> region);
+  void UpdateDraggableRegions(
+      const std::vector<mojom::DraggableRegionPtr>& regions);
 
   void IncrementChildModals();
   void DecrementChildModals();
@@ -151,12 +158,8 @@ class NativeWindowViews : public NativeWindow,
                     LPARAM l_param,
                     LRESULT* result);
   void SetIcon(HICON small_icon, HICON app_icon);
-#elif defined(USE_X11)
+#elif defined(OS_LINUX)
   void SetIcon(const gfx::ImageSkia& icon);
-#endif
-
-#if defined(USE_X11)
-  void SetGTKDarkThemeEnabled(bool use_dark_theme);
 #endif
 
   SkRegion* draggable_region() const { return draggable_region_.get(); }
@@ -278,8 +281,14 @@ class NativeWindowViews : public NativeWindow,
   // Set to true if the window is always on top and behind the task bar.
   bool behind_task_bar_ = false;
 
-  // Whether to block Chromium from handling window messages.
-  bool block_chromium_message_handler_ = false;
+  // Whether we want to set window placement without side effect.
+  bool is_setting_window_placement_ = false;
+
+  // Whether the window is currently being resized.
+  bool is_resizing_ = false;
+
+  // Whether the window is currently being moved.
+  bool is_moving_ = false;
 #endif
 
   // Handles unhandled keyboard messages coming back from the renderer process.

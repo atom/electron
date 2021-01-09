@@ -85,7 +85,7 @@ bool ElectronExtensionsBrowserClient::AreExtensionsDisabled(
 }
 
 bool ElectronExtensionsBrowserClient::IsValidContext(BrowserContext* context) {
-  auto context_map = ElectronBrowserContext::browser_context_map();
+  auto& context_map = ElectronBrowserContext::browser_context_map();
   for (auto const& entry : context_map) {
     if (entry.second && entry.second.get() == context)
       return true;
@@ -113,7 +113,7 @@ BrowserContext* ElectronExtensionsBrowserClient::GetOriginalContext(
     BrowserContext* context) {
   DCHECK(context);
   if (context->IsOffTheRecord()) {
-    return ElectronBrowserContext::From("", false).get();
+    return ElectronBrowserContext::From("", false);
   } else {
     return context;
   }
@@ -179,17 +179,18 @@ void ElectronExtensionsBrowserClient::LoadResourceFromResourceBundle(
 }
 
 namespace {
-bool AllowCrossRendererResourceLoad(const GURL& url,
-                                    blink::mojom::ResourceType resource_type,
-                                    ui::PageTransition page_transition,
-                                    int child_id,
-                                    bool is_incognito,
-                                    const extensions::Extension* extension,
-                                    const extensions::ExtensionSet& extensions,
-                                    const extensions::ProcessMap& process_map,
-                                    bool* allowed) {
+bool AllowCrossRendererResourceLoad(
+    const network::ResourceRequest& request,
+    network::mojom::RequestDestination destination,
+    ui::PageTransition page_transition,
+    int child_id,
+    bool is_incognito,
+    const extensions::Extension* extension,
+    const extensions::ExtensionSet& extensions,
+    const extensions::ProcessMap& process_map,
+    bool* allowed) {
   if (extensions::url_request_util::AllowCrossRendererResourceLoad(
-          url, resource_type, page_transition, child_id, is_incognito,
+          request, destination, page_transition, child_id, is_incognito,
           extension, extensions, process_map, allowed)) {
     return true;
   }
@@ -209,8 +210,8 @@ bool AllowCrossRendererResourceLoad(const GURL& url,
 }  // namespace
 
 bool ElectronExtensionsBrowserClient::AllowCrossRendererResourceLoad(
-    const GURL& url,
-    blink::mojom::ResourceType resource_type,
+    const network::ResourceRequest& request,
+    network::mojom::RequestDestination destination,
     ui::PageTransition page_transition,
     int child_id,
     bool is_incognito,
@@ -219,7 +220,7 @@ bool ElectronExtensionsBrowserClient::AllowCrossRendererResourceLoad(
     const extensions::ProcessMap& process_map) {
   bool allowed = false;
   if (::electron::AllowCrossRendererResourceLoad(
-          url, resource_type, page_transition, child_id, is_incognito,
+          request, destination, page_transition, child_id, is_incognito,
           extension, extensions, process_map, &allowed)) {
     return allowed;
   }
@@ -311,7 +312,7 @@ void ElectronExtensionsBrowserClient::BroadcastEventToRenderers(
 
   std::unique_ptr<extensions::Event> event(
       new extensions::Event(histogram_value, event_name, std::move(args)));
-  auto context_map = ElectronBrowserContext::browser_context_map();
+  auto& context_map = ElectronBrowserContext::browser_context_map();
   for (auto const& entry : context_map) {
     if (entry.second) {
       extensions::EventRouter::Get(entry.second.get())

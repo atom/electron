@@ -1,11 +1,14 @@
 import { expect } from 'chai';
-import { app, session, BrowserWindow, ipcMain, WebContents, Extension } from 'electron/main';
+import { app, session, BrowserWindow, ipcMain, WebContents, Extension, Session } from 'electron/main';
 import { closeAllWindows, closeWindow } from './window-helpers';
 import * as http from 'http';
 import { AddressInfo } from 'net';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as WebSocket from 'ws';
 import { emittedOnce, emittedNTimes } from './events-helpers';
+
+const uuid = require('uuid');
 
 const fixtures = path.join(__dirname, 'fixtures');
 
@@ -15,6 +18,7 @@ describe('chrome extensions', () => {
   // NB. extensions are only allowed on http://, https:// and ftp:// (!) urls by default.
   let server: http.Server;
   let url: string;
+  let port: string;
   before(async () => {
     server = http.createServer((req, res) => {
       if (req.url === '/cors') {
@@ -22,8 +26,19 @@ describe('chrome extensions', () => {
       }
       res.end(emptyPage);
     });
+
+    const wss = new WebSocket.Server({ noServer: true });
+    wss.on('connection', function connection (ws) {
+      ws.on('message', function incoming (message) {
+        if (message === 'foo') {
+          ws.send('bar');
+        }
+      });
+    });
+
     await new Promise(resolve => server.listen(0, '127.0.0.1', () => {
-      url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+      port = String((server.address() as AddressInfo).port);
+      url = `http://127.0.0.1:${port}`;
       resolve();
     }));
   });
@@ -37,6 +52,36 @@ describe('chrome extensions', () => {
     });
   });
 
+  it('does not crash when using chrome.management', async () => {
+    const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+    const w = new BrowserWindow({ show: false, webPreferences: { session: customSession, sandbox: true } });
+    await w.loadURL('about:blank');
+
+    await customSession.loadExtension(path.join(fixtures, 'extensions', 'persistent-background-page'));
+    const args: any = await emittedOnce(app, 'web-contents-created');
+    const wc: Electron.WebContents = args[1];
+    await expect(wc.executeJavaScript(`
+      (() => {
+        return new Promise((resolve) => {
+          chrome.management.getSelf((info) => {
+            resolve(info);
+          });
+        })
+      })();
+    `)).to.eventually.have.property('id');
+  });
+
+  it('can open WebSQLDatabase in a background page', async () => {
+    const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+    const w = new BrowserWindow({ show: false, webPreferences: { session: customSession, sandbox: true } });
+    await w.loadURL('about:blank');
+
+    await customSession.loadExtension(path.join(fixtures, 'extensions', 'persistent-background-page'));
+    const args: any = await emittedOnce(app, 'web-contents-created');
+    const wc: Electron.WebContents = args[1];
+    await expect(wc.executeJavaScript('(()=>{try{openDatabase("t", "1.0", "test", 2e5);return true;}catch(e){throw e}})()')).to.not.be.rejected();
+  });
+
   function fetch (contents: WebContents, url: string) {
     return contents.executeJavaScript(`fetch(${JSON.stringify(url)})`);
   }
@@ -45,8 +90,7 @@ describe('chrome extensions', () => {
     const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
     const w = new BrowserWindow({ show: false, webPreferences: { session: customSession, sandbox: true } });
     const extension = await customSession.loadExtension(path.join(fixtures, 'extensions', 'ui-page'));
-    w.loadURL(`${extension.url}bare-page.html`);
-    await emittedOnce(w.webContents, 'dom-ready');
+    await w.loadURL(`${extension.url}bare-page.html`);
     await expect(fetch(w.webContents, `${url}/cors`)).to.not.be.rejectedWith(TypeError);
   });
 
@@ -55,11 +99,10 @@ describe('chrome extensions', () => {
     // extension registry is redirected to the main session. so installing an
     // extension in an in-memory session results in it being installed in the
     // default session.
-    const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+    const customSession = session.fromPartition(`persist:${uuid.v4()}`);
     await customSession.loadExtension(path.join(fixtures, 'extensions', 'red-bg'));
     const w = new BrowserWindow({ show: false, webPreferences: { session: customSession } });
-    w.loadURL(url);
-    await emittedOnce(w.webContents, 'dom-ready');
+    await w.loadURL(url);
     const bg = await w.webContents.executeJavaScript('document.documentElement.style.backgroundColor');
     expect(bg).to.equal('red');
   });
@@ -67,7 +110,7 @@ describe('chrome extensions', () => {
   it('serializes a loaded extension', async () => {
     const extensionPath = path.join(fixtures, 'extensions', 'red-bg');
     const manifest = JSON.parse(fs.readFileSync(path.join(extensionPath, 'manifest.json'), 'utf-8'));
-    const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+    const customSession = session.fromPartition(`persist:${uuid.v4()}`);
     const extension = await customSession.loadExtension(extensionPath);
     expect(extension.id).to.be.a('string');
     expect(extension.name).to.be.a('string');
@@ -78,7 +121,7 @@ describe('chrome extensions', () => {
   });
 
   it('removes an extension', async () => {
-    const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+    const customSession = session.fromPartition(`persist:${uuid.v4()}`);
     const { id } = await customSession.loadExtension(path.join(fixtures, 'extensions', 'red-bg'));
     {
       const w = new BrowserWindow({ show: false, webPreferences: { session: customSession } });
@@ -95,8 +138,25 @@ describe('chrome extensions', () => {
     }
   });
 
-  it('lists loaded extensions in getAllExtensions', async () => {
+  it('emits extension lifecycle events', async () => {
     const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+
+    const loadedPromise = emittedOnce(customSession, 'extension-loaded');
+    const extension = await customSession.loadExtension(path.join(fixtures, 'extensions', 'red-bg'));
+    const [, loadedExtension] = await loadedPromise;
+    const [, readyExtension] = await emittedOnce(customSession, 'extension-ready');
+
+    expect(loadedExtension.id).to.equal(extension.id);
+    expect(readyExtension.id).to.equal(extension.id);
+
+    const unloadedPromise = emittedOnce(customSession, 'extension-unloaded');
+    await customSession.removeExtension(extension.id);
+    const [, unloadedExtension] = await unloadedPromise;
+    expect(unloadedExtension.id).to.equal(extension.id);
+  });
+
+  it('lists loaded extensions in getAllExtensions', async () => {
+    const customSession = session.fromPartition(`persist:${uuid.v4()}`);
     const e = await customSession.loadExtension(path.join(fixtures, 'extensions', 'red-bg'));
     expect(customSession.getAllExtensions()).to.deep.equal([e]);
     customSession.removeExtension(e.id);
@@ -104,23 +164,22 @@ describe('chrome extensions', () => {
   });
 
   it('gets an extension by id', async () => {
-    const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+    const customSession = session.fromPartition(`persist:${uuid.v4()}`);
     const e = await customSession.loadExtension(path.join(fixtures, 'extensions', 'red-bg'));
     expect(customSession.getExtension(e.id)).to.deep.equal(e);
   });
 
   it('confines an extension to the session it was loaded in', async () => {
-    const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+    const customSession = session.fromPartition(`persist:${uuid.v4()}`);
     await customSession.loadExtension(path.join(fixtures, 'extensions', 'red-bg'));
     const w = new BrowserWindow({ show: false }); // not in the session
-    w.loadURL(url);
-    await emittedOnce(w.webContents, 'dom-ready');
+    await w.loadURL(url);
     const bg = await w.webContents.executeJavaScript('document.documentElement.style.backgroundColor');
     expect(bg).to.equal('');
   });
 
   it('loading an extension in a temporary session throws an error', async () => {
-    const customSession = session.fromPartition(require('uuid').v4());
+    const customSession = session.fromPartition(uuid.v4());
     await expect(customSession.loadExtension(path.join(fixtures, 'extensions', 'red-bg'))).to.eventually.be.rejectedWith('Extensions cannot be loaded in a temporary session');
   });
 
@@ -134,11 +193,10 @@ describe('chrome extensions', () => {
       return result;
     };
     beforeEach(async () => {
-      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+      const customSession = session.fromPartition(`persist:${uuid.v4()}`);
       extension = await customSession.loadExtension(path.join(fixtures, 'extensions', 'chrome-i18n'));
       w = new BrowserWindow({ show: false, webPreferences: { session: customSession, nodeIntegration: true } });
-      w.loadURL(url);
-      await emittedOnce(w.webContents, 'dom-ready');
+      await w.loadURL(url);
     });
     it('getAcceptLanguages()', async () => {
       const result = await exec('getAcceptLanguages');
@@ -152,34 +210,43 @@ describe('chrome extensions', () => {
   });
 
   describe('chrome.runtime', () => {
-    let content: any;
-    before(async () => {
-      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+    let w: BrowserWindow;
+    const exec = async (name: string) => {
+      const p = emittedOnce(ipcMain, 'success');
+      await w.webContents.executeJavaScript(`exec('${name}')`);
+      const [, result] = await p;
+      return result;
+    };
+    beforeEach(async () => {
+      const customSession = session.fromPartition(`persist:${uuid.v4()}`);
       await customSession.loadExtension(path.join(fixtures, 'extensions', 'chrome-runtime'));
-      const w = new BrowserWindow({ show: false, webPreferences: { session: customSession } });
-      try {
-        w.loadURL(url);
-        await emittedOnce(w.webContents, 'dom-ready');
-        content = JSON.parse(await w.webContents.executeJavaScript('document.documentElement.textContent'));
-        expect(content).to.be.an('object');
-      } finally {
-        w.destroy();
-      }
+      w = new BrowserWindow({ show: false, webPreferences: { session: customSession, nodeIntegration: true } });
+      await w.loadURL(url);
     });
-    it('getManifest()', () => {
-      expect(content.manifest).to.be.an('object').with.property('name', 'chrome-runtime');
+    it('getManifest()', async () => {
+      const result = await exec('getManifest');
+      expect(result).to.be.an('object').with.property('name', 'chrome-runtime');
     });
-    it('id', () => {
-      expect(content.id).to.be.a('string').with.lengthOf(32);
+    it('id', async () => {
+      const result = await exec('id');
+      expect(result).to.be.a('string').with.lengthOf(32);
     });
-    it('getURL()', () => {
-      expect(content.url).to.be.a('string').and.match(/^chrome-extension:\/\/.*main.js$/);
+    it('getURL()', async () => {
+      const result = await exec('getURL');
+      expect(result).to.be.a('string').and.match(/^chrome-extension:\/\/.*main.js$/);
+    });
+    it('getPlatformInfo()', async () => {
+      const result = await exec('getPlatformInfo');
+      expect(result).to.be.an('object');
+      expect(result.os).to.be.a('string');
+      expect(result.arch).to.be.a('string');
+      expect(result.nacl_arch).to.be.a('string');
     });
   });
 
   describe('chrome.storage', () => {
     it('stores and retrieves a key', async () => {
-      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+      const customSession = session.fromPartition(`persist:${uuid.v4()}`);
       await customSession.loadExtension(path.join(fixtures, 'extensions', 'chrome-storage'));
       const w = new BrowserWindow({ show: false, webPreferences: { session: customSession, nodeIntegration: true } });
       try {
@@ -193,9 +260,75 @@ describe('chrome extensions', () => {
     });
   });
 
+  describe('chrome.webRequest', () => {
+    function fetch (contents: WebContents, url: string) {
+      return contents.executeJavaScript(`fetch(${JSON.stringify(url)})`);
+    }
+
+    let customSession: Session;
+    let w: BrowserWindow;
+
+    beforeEach(() => {
+      customSession = session.fromPartition(`persist:${uuid.v4()}`);
+      w = new BrowserWindow({ show: false, webPreferences: { session: customSession, sandbox: true, contextIsolation: true } });
+    });
+
+    describe('onBeforeRequest', () => {
+      it('can cancel http requests', async () => {
+        await w.loadURL(url);
+        await customSession.loadExtension(path.join(fixtures, 'extensions', 'chrome-webRequest'));
+        await expect(fetch(w.webContents, url)).to.eventually.be.rejectedWith(TypeError);
+      });
+
+      it('does not cancel http requests when no extension loaded', async () => {
+        await w.loadURL(url);
+        await expect(fetch(w.webContents, url)).to.not.be.rejectedWith(TypeError);
+      });
+    });
+
+    it('does not take precedence over Electron webRequest - http', async () => {
+      return new Promise((resolve) => {
+        (async () => {
+          customSession.webRequest.onBeforeRequest((details, callback) => {
+            resolve();
+            callback({ cancel: true });
+          });
+          await w.loadURL(url);
+
+          await customSession.loadExtension(path.join(fixtures, 'extensions', 'chrome-webRequest'));
+          fetch(w.webContents, url);
+        })();
+      });
+    });
+
+    it('does not take precedence over Electron webRequest - WebSocket', () => {
+      return new Promise((resolve) => {
+        (async () => {
+          customSession.webRequest.onBeforeSendHeaders(() => {
+            resolve();
+          });
+          await w.loadFile(path.join(fixtures, 'api', 'webrequest.html'), { query: { port } });
+          await customSession.loadExtension(path.join(fixtures, 'extensions', 'chrome-webRequest-wss'));
+        })();
+      });
+    });
+
+    describe('WebSocket', () => {
+      it('can be proxied', async () => {
+        await w.loadFile(path.join(fixtures, 'api', 'webrequest.html'), { query: { port } });
+        await customSession.loadExtension(path.join(fixtures, 'extensions', 'chrome-webRequest-wss'));
+        customSession.webRequest.onSendHeaders((details) => {
+          if (details.url.startsWith('ws://')) {
+            expect(details.requestHeaders.foo).be.equal('bar');
+          }
+        });
+      });
+    });
+  });
+
   describe('chrome.tabs', () => {
     it('executeScript', async () => {
-      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+      const customSession = session.fromPartition(`persist:${uuid.v4()}`);
       await customSession.loadExtension(path.join(fixtures, 'extensions', 'chrome-api'));
       const w = new BrowserWindow({ show: false, webPreferences: { session: customSession, nodeIntegration: true } });
       await w.loadURL(url);
@@ -210,12 +343,12 @@ describe('chrome extensions', () => {
     });
 
     it('connect', async () => {
-      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+      const customSession = session.fromPartition(`persist:${uuid.v4()}`);
       await customSession.loadExtension(path.join(fixtures, 'extensions', 'chrome-api'));
       const w = new BrowserWindow({ show: false, webPreferences: { session: customSession, nodeIntegration: true } });
       await w.loadURL(url);
 
-      const portName = require('uuid').v4();
+      const portName = uuid.v4();
       const message = { method: 'connectTab', args: [portName] };
       w.webContents.executeJavaScript(`window.postMessage('${JSON.stringify(message)}', '*')`);
 
@@ -226,7 +359,7 @@ describe('chrome extensions', () => {
     });
 
     it('sendMessage receives the response', async function () {
-      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+      const customSession = session.fromPartition(`persist:${uuid.v4()}`);
       await customSession.loadExtension(path.join(fixtures, 'extensions', 'chrome-api'));
       const w = new BrowserWindow({ show: false, webPreferences: { session: customSession, nodeIntegration: true } });
       await w.loadURL(url);
@@ -244,7 +377,7 @@ describe('chrome extensions', () => {
 
   describe('background pages', () => {
     it('loads a lazy background page when sending a message', async () => {
-      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+      const customSession = session.fromPartition(`persist:${uuid.v4()}`);
       await customSession.loadExtension(path.join(fixtures, 'extensions', 'lazy-background-page'));
       const w = new BrowserWindow({ show: false, webPreferences: { session: customSession, nodeIntegration: true } });
       try {
@@ -260,7 +393,7 @@ describe('chrome extensions', () => {
     });
 
     it('can use extension.getBackgroundPage from a ui page', async () => {
-      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+      const customSession = session.fromPartition(`persist:${uuid.v4()}`);
       const { id } = await customSession.loadExtension(path.join(fixtures, 'extensions', 'lazy-background-page'));
       const w = new BrowserWindow({ show: false, webPreferences: { session: customSession } });
       await w.loadURL(`chrome-extension://${id}/page-get-background.html`);
@@ -269,7 +402,7 @@ describe('chrome extensions', () => {
     });
 
     it('can use extension.getBackgroundPage from a ui page', async () => {
-      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+      const customSession = session.fromPartition(`persist:${uuid.v4()}`);
       const { id } = await customSession.loadExtension(path.join(fixtures, 'extensions', 'lazy-background-page'));
       const w = new BrowserWindow({ show: false, webPreferences: { session: customSession } });
       await w.loadURL(`chrome-extension://${id}/page-get-background.html`);
@@ -278,23 +411,35 @@ describe('chrome extensions', () => {
     });
 
     it('can use runtime.getBackgroundPage from a ui page', async () => {
-      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+      const customSession = session.fromPartition(`persist:${uuid.v4()}`);
       const { id } = await customSession.loadExtension(path.join(fixtures, 'extensions', 'lazy-background-page'));
       const w = new BrowserWindow({ show: false, webPreferences: { session: customSession } });
       await w.loadURL(`chrome-extension://${id}/page-runtime-get-background.html`);
       const receivedMessage = await w.webContents.executeJavaScript('window.completionPromise');
       expect(receivedMessage).to.deep.equal({ some: 'message' });
     });
-  });
 
-  it('has session in background page', async () => {
-    const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
-    await customSession.loadExtension(path.join(fixtures, 'extensions', 'persistent-background-page'));
-    const w = new BrowserWindow({ show: false, webPreferences: { session: customSession } });
-    const promise = emittedOnce(app, 'web-contents-created');
-    await w.loadURL('about:blank');
-    const [, bgPageContents] = await promise;
-    expect(bgPageContents.session).to.not.equal(undefined);
+    it('has session in background page', async () => {
+      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+      await customSession.loadExtension(path.join(fixtures, 'extensions', 'persistent-background-page'));
+      const w = new BrowserWindow({ show: false, webPreferences: { session: customSession } });
+      const promise = emittedOnce(app, 'web-contents-created');
+      await w.loadURL('about:blank');
+      const [, bgPageContents] = await promise;
+      expect(bgPageContents.session).to.not.equal(undefined);
+    });
+
+    it('can open devtools of background page', async () => {
+      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+      await customSession.loadExtension(path.join(fixtures, 'extensions', 'persistent-background-page'));
+      const w = new BrowserWindow({ show: false, webPreferences: { session: customSession } });
+      const promise = emittedOnce(app, 'web-contents-created');
+      await w.loadURL('about:blank');
+      const [, bgPageContents] = await promise;
+      expect(bgPageContents.getType()).to.equal('backgroundPage');
+      bgPageContents.openDevTools();
+      bgPageContents.closeDevTools();
+    });
   });
 
   describe('devtools extensions', () => {
@@ -326,7 +471,7 @@ describe('chrome extensions', () => {
     };
 
     it('loads a devtools extension', async () => {
-      const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
+      const customSession = session.fromPartition(`persist:${uuid.v4()}`);
       customSession.loadExtension(path.join(fixtures, 'extensions', 'devtools-extension'));
       const winningMessage = emittedOnce(ipcMain, 'winning');
       const w = new BrowserWindow({ show: true, webPreferences: { session: customSession, nodeIntegration: true } });
@@ -334,33 +479,6 @@ describe('chrome extensions', () => {
       w.webContents.openDevTools();
       showLastDevToolsPanel(w);
       await winningMessage;
-    });
-  });
-
-  describe('deprecation shims', () => {
-    it('loads an extension through BrowserWindow.addExtension', async () => {
-      BrowserWindow.addExtension(path.join(fixtures, 'extensions', 'red-bg'));
-      const w = new BrowserWindow({ show: false });
-      await w.loadURL(url);
-      const bg = await w.webContents.executeJavaScript('document.documentElement.style.backgroundColor');
-      expect(bg).to.equal('red');
-    });
-
-    it('loads an extension through BrowserWindow.addDevToolsExtension', async () => {
-      BrowserWindow.addDevToolsExtension(path.join(fixtures, 'extensions', 'red-bg'));
-      const w = new BrowserWindow({ show: false });
-      await w.loadURL(url);
-      const bg = await w.webContents.executeJavaScript('document.documentElement.style.backgroundColor');
-      expect(bg).to.equal('red');
-    });
-
-    it('removes an extension through BrowserWindow.removeExtension', async () => {
-      await (BrowserWindow.addExtension(path.join(fixtures, 'extensions', 'red-bg')) as any);
-      BrowserWindow.removeExtension('red-bg');
-      const w = new BrowserWindow({ show: false });
-      await w.loadURL(url);
-      const bg = await w.webContents.executeJavaScript('document.documentElement.style.backgroundColor');
-      expect(bg).to.equal('');
     });
   });
 
@@ -446,11 +564,11 @@ describe('chrome extensions', () => {
           const COLOR_TRANSPARENT = 'rgba(0, 0, 0, 0)';
 
           before(() => {
-            BrowserWindow.addExtension(contentScript);
+            session.defaultSession.loadExtension(contentScript);
           });
 
           after(() => {
-            BrowserWindow.removeExtension('content-script-test');
+            session.defaultSession.removeExtension('content-script-test');
           });
 
           beforeEach(() => {
@@ -518,8 +636,7 @@ describe('chrome extensions', () => {
     it('loads a ui page of an extension', async () => {
       const { id } = await session.defaultSession.loadExtension(path.join(fixtures, 'extensions', 'ui-page'));
       const w = new BrowserWindow({ show: false });
-      w.loadURL(`chrome-extension://${id}/bare-page.html`);
-      await emittedOnce(w.webContents, 'dom-ready');
+      await w.loadURL(`chrome-extension://${id}/bare-page.html`);
       const textContent = await w.webContents.executeJavaScript('document.body.textContent');
       expect(textContent).to.equal('ui page loaded ok\n');
     });
@@ -527,8 +644,7 @@ describe('chrome extensions', () => {
     it('can load resources', async () => {
       const { id } = await session.defaultSession.loadExtension(path.join(fixtures, 'extensions', 'ui-page'));
       const w = new BrowserWindow({ show: false });
-      w.loadURL(`chrome-extension://${id}/page-script-load.html`);
-      await emittedOnce(w.webContents, 'dom-ready');
+      await w.loadURL(`chrome-extension://${id}/page-script-load.html`);
       const textContent = await w.webContents.executeJavaScript('document.body.textContent');
       expect(textContent).to.equal('script loaded ok\n');
     });

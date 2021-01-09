@@ -109,7 +109,7 @@ void NativeWindow::InitFromOptions(const gin_helper::Dictionary& options) {
   } else {
     SetSizeConstraints(size_constraints);
   }
-#if defined(OS_WIN) || defined(USE_X11)
+#if defined(OS_WIN) || defined(OS_LINUX)
   bool resizable;
   if (options.Get(options::kResizable, &resizable)) {
     SetResizable(resizable);
@@ -139,7 +139,7 @@ void NativeWindow::InitFromOptions(const gin_helper::Dictionary& options) {
   bool fullscreen = false;
   if (options.Get(options::kFullscreen, &fullscreen) && !fullscreen) {
     // Disable fullscreen button if 'fullscreen' is specified to false.
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
     fullscreenable = false;
 #endif
   }
@@ -157,7 +157,7 @@ void NativeWindow::InitFromOptions(const gin_helper::Dictionary& options) {
   if (options.Get(options::kKiosk, &kiosk) && kiosk) {
     SetKiosk(kiosk);
   }
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   std::string type;
   if (options.Get(options::kVibrancyType, &type)) {
     SetVibrancy(type);
@@ -310,6 +310,10 @@ double NativeWindow::GetSheetOffsetY() {
   return sheet_offset_y_;
 }
 
+bool NativeWindow::IsTabletMode() const {
+  return false;
+}
+
 void NativeWindow::SetRepresentedFilename(const std::string& filename) {}
 
 std::string NativeWindow::GetRepresentedFilename() {
@@ -346,7 +350,7 @@ bool NativeWindow::AddTabbedWindow(NativeWindow* window) {
   return true;  // for non-Mac platforms
 }
 
-void NativeWindow::SetVibrancy(const std::string& filename) {}
+void NativeWindow::SetVibrancy(const std::string& type) {}
 
 void NativeWindow::SetTouchBar(
     std::vector<gin_helper::PersistentDictionary> items) {}
@@ -493,6 +497,11 @@ void NativeWindow::NotifyWindowResize() {
     observer.OnWindowResize();
 }
 
+void NativeWindow::NotifyWindowResized() {
+  for (NativeWindowObserver& observer : observers_)
+    observer.OnWindowResized();
+}
+
 void NativeWindow::NotifyWindowMove() {
   for (NativeWindowObserver& observer : observers_)
     observer.OnWindowMove();
@@ -573,6 +582,13 @@ void NativeWindow::NotifyTouchBarItemInteraction(
 void NativeWindow::NotifyNewWindowForTab() {
   for (NativeWindowObserver& observer : observers_)
     observer.OnNewWindowForTab();
+}
+
+void NativeWindow::NotifyWindowSystemContextMenu(int x,
+                                                 int y,
+                                                 bool* prevent_default) {
+  for (NativeWindowObserver& observer : observers_)
+    observer.OnSystemContextMenu(x, y, prevent_default);
 }
 
 #if defined(OS_WIN)

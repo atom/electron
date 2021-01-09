@@ -4,6 +4,11 @@
 
 #include "shell/browser/native_browser_view_views.h"
 
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include "shell/browser/ui/drag_util.h"
 #include "shell/browser/ui/inspectable_web_contents_view.h"
 #include "ui/gfx/geometry/rect.h"
 #include "ui/views/background.h"
@@ -22,11 +27,32 @@ void NativeBrowserViewViews::SetAutoResizeFlags(uint8_t flags) {
   ResetAutoResizeProportions();
 }
 
+void NativeBrowserViewViews::UpdateDraggableRegions(
+    const std::vector<mojom::DraggableRegionPtr>& regions) {
+  // We need to snap the regions to the bounds of the current BrowserView.
+  // For example, if an attached BrowserView is draggable but its bounds are
+  // { x: 200,  y: 100, width: 300, height: 300 }
+  // then we need to add 200 to the x-value and 100 to the
+  // y-value of each of the passed regions or it will be incorrectly
+  // assumed that the regions begin in the top left corner as they
+  // would for the main client window.
+  auto const offset = GetBounds().OffsetFromOrigin();
+  auto snapped_regions = mojo::Clone(regions);
+  for (auto& snapped_region : snapped_regions) {
+    snapped_region->bounds.Offset(offset);
+  }
+
+  draggable_region_ = DraggableRegionsToSkRegion(snapped_regions);
+}
+
 void NativeBrowserViewViews::SetAutoResizeProportions(
     const gfx::Size& window_size) {
   if ((auto_resize_flags_ & AutoResizeFlags::kAutoResizeHorizontal) &&
       !auto_horizontal_proportion_set_) {
-    auto* view = GetInspectableWebContentsView()->GetView();
+    auto* iwc_view = GetInspectableWebContentsView();
+    if (!iwc_view)
+      return;
+    auto* view = iwc_view->GetView();
     auto view_bounds = view->bounds();
     auto_horizontal_proportion_width_ =
         static_cast<float>(window_size.width()) /
@@ -37,7 +63,10 @@ void NativeBrowserViewViews::SetAutoResizeProportions(
   }
   if ((auto_resize_flags_ & AutoResizeFlags::kAutoResizeVertical) &&
       !auto_vertical_proportion_set_) {
-    auto* view = GetInspectableWebContentsView()->GetView();
+    auto* iwc_view = GetInspectableWebContentsView();
+    if (!iwc_view)
+      return;
+    auto* view = iwc_view->GetView();
     auto view_bounds = view->bounds();
     auto_vertical_proportion_height_ =
         static_cast<float>(window_size.height()) /
@@ -51,7 +80,10 @@ void NativeBrowserViewViews::SetAutoResizeProportions(
 void NativeBrowserViewViews::AutoResize(const gfx::Rect& new_window,
                                         int width_delta,
                                         int height_delta) {
-  auto* view = GetInspectableWebContentsView()->GetView();
+  auto* iwc_view = GetInspectableWebContentsView();
+  if (!iwc_view)
+    return;
+  auto* view = iwc_view->GetView();
   const auto flags = GetAutoResizeFlags();
   if (!(flags & kAutoResizeWidth)) {
     width_delta = 0;
@@ -92,17 +124,26 @@ void NativeBrowserViewViews::ResetAutoResizeProportions() {
 }
 
 void NativeBrowserViewViews::SetBounds(const gfx::Rect& bounds) {
-  auto* view = GetInspectableWebContentsView()->GetView();
+  auto* iwc_view = GetInspectableWebContentsView();
+  if (!iwc_view)
+    return;
+  auto* view = iwc_view->GetView();
   view->SetBoundsRect(bounds);
   ResetAutoResizeProportions();
 }
 
 gfx::Rect NativeBrowserViewViews::GetBounds() {
-  return GetInspectableWebContentsView()->GetView()->bounds();
+  auto* iwc_view = GetInspectableWebContentsView();
+  if (!iwc_view)
+    return gfx::Rect();
+  return iwc_view->GetView()->bounds();
 }
 
 void NativeBrowserViewViews::SetBackgroundColor(SkColor color) {
-  auto* view = GetInspectableWebContentsView()->GetView();
+  auto* iwc_view = GetInspectableWebContentsView();
+  if (!iwc_view)
+    return;
+  auto* view = iwc_view->GetView();
   view->SetBackground(views::CreateSolidBackground(color));
   view->SchedulePaint();
 }

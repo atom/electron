@@ -21,11 +21,8 @@
 namespace electron {
 
 SubmenuButton::SubmenuButton(const base::string16& title,
-                             views::ButtonListener* button_listener,
                              const SkColor& background_color)
-    : views::MenuButton(
-          gfx::RemoveAcceleratorChar(title, '&', nullptr, nullptr),
-          button_listener),
+    : views::MenuButton(PressedCallback(), gfx::RemoveAccelerator(title)),
       background_color_(background_color) {
 #if defined(OS_LINUX)
   // Dont' use native style border.
@@ -38,7 +35,7 @@ SubmenuButton::SubmenuButton(const base::string16& title,
                                &text_height_, 0, 0);
 
   SetInkDropMode(InkDropMode::ON);
-  set_ink_drop_base_color(
+  SetInkDropBaseColor(
       color_utils::BlendTowardMaxContrast(background_color_, 0x81));
 }
 
@@ -49,7 +46,7 @@ std::unique_ptr<views::InkDropRipple> SubmenuButton::CreateInkDropRipple()
   std::unique_ptr<views::InkDropRipple> ripple(
       new views::FloodFillInkDropRipple(
           size(), GetInkDropCenterBasedOnLastEvent(), GetInkDropBaseColor(),
-          ink_drop_visible_opacity()));
+          GetInkDropVisibleOpacity()));
   return ripple;
 }
 
@@ -96,7 +93,8 @@ bool SubmenuButton::GetUnderlinePosition(const base::string16& text,
                                          int* start,
                                          int* end) const {
   int pos, span;
-  base::string16 trimmed = gfx::RemoveAcceleratorChar(text, '&', &pos, &span);
+  base::string16 trimmed =
+      gfx::LocateAndRemoveAcceleratorChar(text, &pos, &span);
   if (pos > -1 && span != 0) {
     *accelerator = base::ToUpperASCII(trimmed[pos]);
     GetCharacterPosition(trimmed, pos, start);

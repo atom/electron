@@ -14,6 +14,7 @@
 #include "base/strings/string_split.h"
 #include "components/crash/core/common/crash_key.h"
 #include "content/public/common/content_switches.h"
+#include "electron/fuses.h"
 #include "shell/common/electron_constants.h"
 #include "shell/common/options_switches.h"
 #include "third_party/crashpad/crashpad/client/annotation.h"
@@ -100,6 +101,9 @@ void GetCrashKeys(std::map<std::string, std::string>* keys) {
 namespace {
 bool IsRunningAsNode() {
 #if BUILDFLAG(ENABLE_RUN_AS_NODE)
+  if (!electron::fuses::IsRunAsNodeEnabled())
+    return false;
+
   return base::Environment::Create()->HasVar(electron::kRunAsNode);
 #else
   return false;
@@ -142,7 +146,7 @@ void SetPlatformCrashKey() {
   static crash_reporter::CrashKeyString<8> platform_key("platform");
 #if defined(OS_WIN)
   platform_key.Set("win32");
-#elif defined(OS_MACOSX)
+#elif defined(OS_MAC)
   platform_key.Set("darwin");
 #elif defined(OS_LINUX)
   platform_key.Set("linux");

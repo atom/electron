@@ -12,6 +12,7 @@
 #include "cc/paint/skia_paint_canvas.h"
 #include "content/public/browser/render_view_host.h"
 #include "ui/accessibility/ax_enums.mojom.h"
+#include "ui/base/dragdrop/drag_drop_types.h"
 #include "ui/events/keycodes/keyboard_codes.h"
 #include "ui/gfx/canvas.h"
 #include "ui/gfx/geometry/point.h"
@@ -72,7 +73,7 @@ void AutofillPopupView::Show() {
     // The widget is destroyed by the corresponding NativeWidget, so we use
     // a weak pointer to hold the reference and don't have to worry about
     // deletion.
-    views::Widget* widget = new views::Widget;
+    auto* widget = new views::Widget;
     views::Widget::InitParams params(views::Widget::InitParams::TYPE_POPUP);
     params.delegate = this;
     params.parent = parent_widget_->GetNativeView();

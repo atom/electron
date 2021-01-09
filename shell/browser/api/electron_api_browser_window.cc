@@ -14,6 +14,7 @@
 #include "content/public/browser/render_view_host.h"
 #include "shell/browser/api/electron_api_web_contents_view.h"
 #include "shell/browser/browser.h"
+#include "shell/browser/native_browser_view.h"
 #include "shell/browser/unresponsive_suppressor.h"
 #include "shell/browser/web_contents_preferences.h"
 #include "shell/browser/window_list.h"
@@ -93,8 +94,9 @@ BrowserWindow::BrowserWindow(gin::Arguments* args,
   // Install the content view after BaseWindow's JS code is initialized.
   SetContentView(gin::CreateHandle<View>(isolate, web_contents_view.get()));
 
-#if defined(OS_MACOSX)
-  OverrideNSWindowContentView(web_contents->managed_web_contents());
+#if defined(OS_MAC)
+  OverrideNSWindowContentView(
+      web_contents->inspectable_web_contents()->GetView());
 #endif
 
   // Init window after everything has been setup.
@@ -152,15 +154,6 @@ void BrowserWindow::DidFirstVisuallyNonEmptyPaint() {
   auto* const view = web_contents()->GetRenderWidgetHostView();
   view->Show();
   view->SetSize(window()->GetContentSize());
-
-  // Emit the ReadyToShow event in next tick in case of pending drawing work.
-  base::ThreadTaskRunnerHandle::Get()->PostTask(
-      FROM_HERE, base::BindOnce(
-                     [](base::WeakPtr<BrowserWindow> self) {
-                       if (self)
-                         self->Emit("ready-to-show");
-                     },
-                     GetWeakPtr()));
 }
 
 void BrowserWindow::BeforeUnloadDialogCancelled() {
@@ -228,7 +221,7 @@ void BrowserWindow::OnSetContentBounds(const gfx::Rect& rect) {
 
 void BrowserWindow::OnActivateContents() {
   // Hide the auto-hide menu when webContents is focused.
-#if !defined(OS_MACOSX)
+#if !defined(OS_MAC)
   if (IsMenuBarAutoHide() && IsMenuBarVisible())
     window()->SetMenuBarVisibility(false);
 #endif
@@ -257,7 +250,7 @@ void BrowserWindow::OnCloseButtonClicked(bool* prevent_default) {
 
   // Assume the window is not responding if it doesn't cancel the close and is
   // not closed in 5s, in this way we can quickly show the unresponsive
-  // dialog when the window is busy executing some script withouth waiting for
+  // dialog when the window is busy executing some script without waiting for
   // the unresponsive timeout.
   if (window_unresponsive_closure_.IsCancelled())
     ScheduleUnresponsiveEvent(5000);
@@ -269,7 +262,7 @@ void BrowserWindow::OnCloseButtonClicked(bool* prevent_default) {
   // Required to make beforeunload handler work.
   api_web_contents_->NotifyUserActivation();
 
-  if (web_contents()->NeedToFireBeforeUnloadOrUnload())
+  if (web_contents()->NeedToFireBeforeUnloadOrUnloadEvents())
     web_contents()->DispatchBeforeUnload(false /* auto_cancel */);
   else
     web_contents()->Close();
@@ -295,7 +288,7 @@ void BrowserWindow::OnWindowBlur() {
 void BrowserWindow::OnWindowFocus() {
   web_contents()->RestoreFocus();
 
-#if !defined(OS_MACOSX)
+#if !defined(OS_MAC)
   if (!api_web_contents_->IsDevToolsOpened())
     web_contents()->Focus();
 #endif
@@ -304,7 +297,7 @@ void BrowserWindow::OnWindowFocus() {
 }
 
 void BrowserWindow::OnWindowIsKeyChanged(bool is_key) {
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   auto* rwhv = web_contents()->GetRenderWidgetHostView();
   if (rwhv)
     rwhv->SetActive(is_key);
@@ -312,19 +305,24 @@ void BrowserWindow::OnWindowIsKeyChanged(bool is_key) {
 }
 
 void BrowserWindow::OnWindowResize() {
-#if defined(OS_MACOSX)
-  if (!draggable_regions_.empty())
+#if defined(OS_MAC)
+  if (!draggable_regions_.empty()) {
     UpdateDraggableRegions(draggable_regions_);
+  } else {
+    for (NativeBrowserView* view : window_->browser_views()) {
+      view->UpdateDraggableRegions(view->GetDraggableRegions());
+    }
+  }
 #endif
   BaseWindow::OnWindowResize();
 }
 
 void BrowserWindow::OnWindowLeaveFullScreen() {
-  BaseWindow::OnWindowLeaveFullScreen();
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   if (web_contents()->IsFullscreen())
     web_contents()->ExitFullscreen(true);
 #endif
+  BaseWindow::OnWindowLeaveFullScreen();
 }
 
 void BrowserWindow::Focus() {
@@ -361,28 +359,28 @@ void BrowserWindow::SetBackgroundColor(const std::string& color_name) {
 void BrowserWindow::SetBrowserView(v8::Local<v8::Value> value) {
   BaseWindow::ResetBrowserViews();
   BaseWindow::AddBrowserView(value);
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   UpdateDraggableRegions(draggable_regions_);
 #endif
 }
 
 void BrowserWindow::AddBrowserView(v8::Local<v8::Value> value) {
   BaseWindow::AddBrowserView(value);
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   UpdateDraggableRegions(draggable_regions_);
 #endif
 }
 
 void BrowserWindow::RemoveBrowserView(v8::Local<v8::Value> value) {
   BaseWindow::RemoveBrowserView(value);
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   UpdateDraggableRegions(draggable_regions_);
 #endif
 }
 
 void BrowserWindow::ResetBrowserViews() {
   BaseWindow::ResetBrowserViews();
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   UpdateDraggableRegions(draggable_regions_);
 #endif
 }
@@ -421,19 +419,6 @@ v8::Local<v8::Value> BrowserWindow::GetWebContents(v8::Isolate* isolate) {
   if (web_contents_.IsEmpty())
     return v8::Null(isolate);
   return v8::Local<v8::Value>::New(isolate, web_contents_);
-}
-
-// Convert draggable regions in raw format to SkRegion format.
-std::unique_ptr<SkRegion> BrowserWindow::DraggableRegionsToSkRegion(
-    const std::vector<mojom::DraggableRegionPtr>& regions) {
-  auto sk_region = std::make_unique<SkRegion>();
-  for (const auto& region : regions) {
-    sk_region->op(
-        {region->bounds.x(), region->bounds.y(), region->bounds.right(),
-         region->bounds.bottom()},
-        region->draggable ? SkRegion::kUnion_Op : SkRegion::kDifference_Op);
-  }
-  return sk_region;
 }
 
 void BrowserWindow::ScheduleUnresponsiveEvent(int ms) {

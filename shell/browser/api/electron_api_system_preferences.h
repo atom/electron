@@ -25,8 +25,8 @@ namespace electron {
 
 namespace api {
 
-#if defined(OS_MACOSX)
-enum NotificationCenterKind {
+#if defined(OS_MAC)
+enum class NotificationCenterKind {
   kNSDistributedNotificationCenter = 0,
   kNSNotificationCenter,
   kNSWorkspaceNotificationCenter,
@@ -51,7 +51,7 @@ class SystemPreferences
       v8::Isolate* isolate) override;
   const char* GetTypeName() override;
 
-#if defined(OS_WIN) || defined(OS_MACOSX)
+#if defined(OS_WIN) || defined(OS_MAC)
   std::string GetAccentColor();
   std::string GetColor(gin_helper::ErrorThrower thrower,
                        const std::string& color);
@@ -69,7 +69,7 @@ class SystemPreferences
   // BrowserObserver:
   void OnFinishLaunching(const base::DictionaryValue& launch_info) override;
 
-#elif defined(OS_MACOSX)
+#elif defined(OS_MAC)
   using NotificationCallback = base::RepeatingCallback<
       void(const std::string&, base::DictionaryValue, const std::string&)>;
 
@@ -117,7 +117,6 @@ class SystemPreferences
   v8::Local<v8::Value> GetAppLevelAppearance(v8::Isolate* isolate);
   void SetAppLevelAppearance(gin::Arguments* args);
 #endif
-  bool IsDarkMode();
   bool IsInvertedColorScheme();
   bool IsHighContrastColorScheme();
   v8::Local<v8::Value> GetAnimationSettings(v8::Isolate* isolate);
@@ -126,7 +125,7 @@ class SystemPreferences
   SystemPreferences();
   ~SystemPreferences() override;
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   int DoSubscribeNotification(const std::string& name,
                               const NotificationCallback& callback,
                               NotificationCenterKind kind);

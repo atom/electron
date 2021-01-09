@@ -42,7 +42,6 @@ class Browser;
 class ElectronBindings;
 class JavascriptEnvironment;
 class NodeBindings;
-class NodeDebugger;
 class NodeEnvironment;
 class BridgeTaskRunner;
 
@@ -55,11 +54,11 @@ class ElectronExtensionsBrowserClient;
 class ViewsDelegate;
 #endif
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
 class ViewsDelegateMac;
 #endif
 
-#if defined(USE_X11)
+#if defined(OS_LINUX)
 class DarkThemeObserver;
 #endif
 
@@ -90,7 +89,6 @@ class ElectronBrowserMainParts : public content::BrowserMainParts {
 
   Browser* browser() { return browser_.get(); }
   BrowserProcessImpl* browser_process() { return fake_browser_process_.get(); }
-  NodeEnvironment* node_env() { return node_env_.get(); }
 
  protected:
   // content::BrowserMainParts:
@@ -113,16 +111,18 @@ class ElectronBrowserMainParts : public content::BrowserMainParts {
 #if defined(OS_POSIX)
   // Set signal handlers.
   void HandleSIGCHLD();
-  void HandleShutdownSignals();
+  void InstallShutdownSignalHandlers(
+      base::OnceCallback<void()> shutdown_callback,
+      const scoped_refptr<base::SingleThreadTaskRunner>& task_runner);
 #endif
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   void FreeAppDelegate();
   void RegisterURLHandler();
   void InitializeMainNib();
 #endif
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   std::unique_ptr<ViewsDelegateMac> views_delegate_;
 #else
   std::unique_ptr<ViewsDelegate> views_delegate_;
@@ -134,6 +134,9 @@ class ElectronBrowserMainParts : public content::BrowserMainParts {
 
 #if defined(USE_X11)
   std::unique_ptr<ui::GtkUiDelegate> gtk_ui_delegate_;
+#endif
+
+#if defined(OS_LINUX)
   // Used to notify the native theme of changes to dark mode.
   std::unique_ptr<DarkThemeObserver> dark_theme_observer_;
 #endif
@@ -151,7 +154,6 @@ class ElectronBrowserMainParts : public content::BrowserMainParts {
   std::unique_ptr<NodeBindings> node_bindings_;
   std::unique_ptr<ElectronBindings> electron_bindings_;
   std::unique_ptr<NodeEnvironment> node_env_;
-  std::unique_ptr<NodeDebugger> node_debugger_;
   std::unique_ptr<IconManager> icon_manager_;
   std::unique_ptr<base::FieldTrialList> field_trial_list_;
 
@@ -159,8 +161,6 @@ class ElectronBrowserMainParts : public content::BrowserMainParts {
   std::unique_ptr<ElectronExtensionsClient> extensions_client_;
   std::unique_ptr<ElectronExtensionsBrowserClient> extensions_browser_client_;
 #endif
-
-  base::RepeatingTimer gc_timer_;
 
   // List of callbacks should be executed before destroying JS env.
   std::list<base::OnceClosure> destructors_;

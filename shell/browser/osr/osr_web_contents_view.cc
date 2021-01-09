@@ -15,7 +15,7 @@ OffScreenWebContentsView::OffScreenWebContentsView(
     bool transparent,
     const OnPaintCallback& callback)
     : native_window_(nullptr), transparent_(transparent), callback_(callback) {
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   PlatformCreate();
 #endif
 }
@@ -24,7 +24,7 @@ OffScreenWebContentsView::~OffScreenWebContentsView() {
   if (native_window_)
     native_window_->RemoveObserver(this);
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   PlatformDestroy();
 #endif
 }
@@ -66,7 +66,7 @@ gfx::Size OffScreenWebContentsView::GetSize() {
   return native_window_ ? native_window_->GetSize() : gfx::Size();
 }
 
-#if !defined(OS_MACOSX)
+#if !defined(OS_MAC)
 gfx::NativeView OffScreenWebContentsView::GetNativeView() const {
   if (!native_window_)
     return gfx::NativeView();
@@ -126,15 +126,13 @@ OffScreenWebContentsView::CreateViewForWidget(
 content::RenderWidgetHostViewBase*
 OffScreenWebContentsView::CreateViewForChildWidget(
     content::RenderWidgetHost* render_widget_host) {
-  content::WebContentsImpl* web_contents_impl =
+  auto* web_contents_impl =
       static_cast<content::WebContentsImpl*>(web_contents_);
 
-  OffScreenRenderWidgetHostView* view =
-      static_cast<OffScreenRenderWidgetHostView*>(
-          web_contents_impl->GetOuterWebContents()
-              ? web_contents_impl->GetOuterWebContents()
-                    ->GetRenderWidgetHostView()
-              : web_contents_impl->GetRenderWidgetHostView());
+  auto* view = static_cast<OffScreenRenderWidgetHostView*>(
+      web_contents_impl->GetOuterWebContents()
+          ? web_contents_impl->GetOuterWebContents()->GetRenderWidgetHostView()
+          : web_contents_impl->GetRenderWidgetHostView());
 
   return new OffScreenRenderWidgetHostView(transparent_, painting_,
                                            view->GetFrameRate(), callback_,
@@ -154,18 +152,18 @@ void OffScreenWebContentsView::RenderViewHostChanged(
 
 void OffScreenWebContentsView::SetOverscrollControllerEnabled(bool enabled) {}
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
 bool OffScreenWebContentsView::CloseTabAfterEventTrackingIfNeeded() {
   return false;
 }
-#endif  // defined(OS_MACOSX)
+#endif  // defined(OS_MAC)
 
 void OffScreenWebContentsView::StartDragging(
     const content::DropData& drop_data,
-    blink::WebDragOperationsMask allowed_ops,
+    blink::DragOperationsMask allowed_ops,
     const gfx::ImageSkia& image,
     const gfx::Vector2d& image_offset,
-    const content::DragEventSourceInfo& event_info,
+    const blink::mojom::DragEventSourceInfo& event_info,
     content::RenderWidgetHostImpl* source_rwh) {
   if (web_contents_)
     static_cast<content::WebContentsImpl*>(web_contents_)
@@ -173,7 +171,7 @@ void OffScreenWebContentsView::StartDragging(
 }
 
 void OffScreenWebContentsView::UpdateDragCursor(
-    blink::WebDragOperation operation) {}
+    blink::DragOperation operation) {}
 
 void OffScreenWebContentsView::SetPainting(bool painting) {
   auto* view = GetView();

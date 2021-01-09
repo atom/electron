@@ -6,7 +6,7 @@ Subject: remove some deps that do not work on arm64
 Once these deps have been fixed upstream we can remove this patch.
 
 diff --git a/.vpython b/.vpython
-index 27117b1372b9a002672161f9c1fe3c1a14448c7d..5d330c75ca24863c0aa0e596ab66c48f65541c34 100644
+index b03ea0669644ee801efb57410ba3a6215f4884f2..7f6c4c9abc38127548e301a203733d307a8f255c 100644
 --- a/.vpython
 +++ b/.vpython
 @@ -53,10 +53,10 @@ wheel: <
@@ -151,18 +151,3 @@ index 27117b1372b9a002672161f9c1fe3c1a14448c7d..5d330c75ca24863c0aa0e596ab66c48f
  wheel: <
    name: "infra/python/wheels/pytz-py2_py3"
    version: "version:2018.4"
-@@ -275,10 +275,10 @@ wheel <
-   name: "infra/python/wheels/funcsigs-py2_py3"
-   version: "version:1.0.2"
- >
--wheel: <
--  name: "infra/python/wheels/psutil/${vpython_platform}"
--  version: "version:5.2.2"
-->
-+#wheel: <
-+#  name: "infra/python/wheels/psutil/${vpython_platform}"
-+#  version: "version:5.2.2"
-+#>
- 
- # Used by:
- #   tools/infra

@@ -17,7 +17,7 @@ class TracingSamplerProfiler;
 
 namespace electron {
 
-void LoadResourceBundle(const std::string& locale);
+std::string LoadResourceBundle(const std::string& locale);
 
 class ElectronMainDelegate : public content::ContentMainDelegate {
  public:
@@ -31,7 +31,6 @@ class ElectronMainDelegate : public content::ContentMainDelegate {
   bool BasicStartupComplete(int* exit_code) override;
   void PreSandboxStartup() override;
   void PreCreateMainMessageLoop() override;
-  void PostEarlyInitialization(bool is_running_tests) override;
   content::ContentBrowserClient* CreateContentBrowserClient() override;
   content::ContentGpuClient* CreateContentGpuClient() override;
   content::ContentRendererClient* CreateContentRendererClient() override;
@@ -46,7 +45,7 @@ class ElectronMainDelegate : public content::ContentMainDelegate {
 #endif
 
  private:
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
   void OverrideChildProcessPath();
   void OverrideFrameworkBundlePath();
   void SetUpBundleOverrides();
