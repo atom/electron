@@ -73,6 +73,10 @@ const guestInstanceId = getWebPreference(window, 'guestInstanceId') || null;
 const openerId = getWebPreference(window, 'openerId') || null;
 const appPath = hasSwitch('app-path') ? getSwitchValue('app-path') : null;
 
+if (process.platform === 'win32') {
+  require('@electron/internal/renderer/win32-queryendsession-setup.ts')(process);
+}
+
 // The webContents preload script is loaded after the session preload scripts.
 if (preloadScript) {
   preloadScripts.push(preloadScript);

@@ -49,6 +49,9 @@ class ElectronApiServiceImpl;
 class ElectronExtensionsRendererClient;
 #endif
 
+#if defined(OS_WIN)
+class ShutdownBlockerWin;
+#endif
 class RendererClientBase : public content::ContentRendererClient
 #if BUILDFLAG(ENABLE_BUILTIN_SPELLCHECKER)
     ,
@@ -150,6 +153,10 @@ class RendererClientBase : public content::ContentRendererClient
 #if BUILDFLAG(ENABLE_ELECTRON_EXTENSIONS)
   std::unique_ptr<extensions::ExtensionsClient> extensions_client_;
   std::unique_ptr<ElectronExtensionsRendererClient> extensions_renderer_client_;
+#endif
+
+#if defined(OS_WIN)
+  std::unique_ptr<ShutdownBlockerWin> shutdown_blocker_;
 #endif
 
 #if defined(WIDEVINE_CDM_AVAILABLE)
