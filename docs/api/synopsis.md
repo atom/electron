@@ -1,3 +1,8 @@
+---
+title: "Synopsis"
+description: "How to use Node.js and Electron APIs."
+---
+
 # Synopsis
 
 > How to use Node.js and Electron APIs.

@@ -1,3 +1,8 @@
+---
+title: "GPUFeatureStatus Object"
+description: ""
+---
+
 # GPUFeatureStatus Object
 
 * `2d_canvas` String - Canvas.

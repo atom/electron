@@ -1,3 +1,8 @@
+---
+title: "nativeTheme"
+description: "Read and respond to changes in Chromium's native color theme."
+---
+
 # nativeTheme
 
 > Read and respond to changes in Chromium's native color theme.

@@ -1,3 +1,8 @@
+---
+title: "Debugging in VSCode"
+description: "This guide goes over how to set up VSCode debugging for both your own Electron project as well as the native Electron codebase."
+---
+
 # Debugging in VSCode
 
 This guide goes over how to set up VSCode debugging for both your own Electron project as well as the native Electron codebase.

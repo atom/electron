@@ -1,3 +1,8 @@
+---
+title: "Display Object"
+description: ""
+---
+
 # Display Object
 
 * `id` Number - Unique identifier associated with the display.

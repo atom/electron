@@ -1,3 +1,8 @@
+---
+title: "crashReporter"
+description: "Submit crash reports to a remote server."
+---
+
 # crashReporter
 
 > Submit crash reports to a remote server.

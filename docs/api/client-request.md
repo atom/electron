@@ -1,3 +1,8 @@
+---
+title: "Class: ClientRequest"
+description: "Make HTTP/HTTPS requests."
+---
+
 ## Class: ClientRequest
 
 > Make HTTP/HTTPS requests.

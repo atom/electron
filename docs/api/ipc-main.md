@@ -1,3 +1,8 @@
+---
+title: "ipcMain"
+description: "Communicate asynchronously from the main process to renderer processes."
+---
+
 # ipcMain
 
 > Communicate asynchronously from the main process to renderer processes.

@@ -1,3 +1,8 @@
+---
+title: "protocol"
+description: "Register a custom protocol and intercept existing protocol requests."
+---
+
 # protocol
 
 > Register a custom protocol and intercept existing protocol requests.

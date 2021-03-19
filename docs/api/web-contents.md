@@ -1,3 +1,8 @@
+---
+title: "webContents"
+description: "Render and control web pages."
+---
+
 # webContents
 
 > Render and control web pages.

@@ -1,3 +1,8 @@
+---
+title: "Class: DownloadItem"
+description: "Control file downloads from remote sources."
+---
+
 ## Class: DownloadItem
 
 > Control file downloads from remote sources.

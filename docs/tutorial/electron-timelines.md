@@ -1,3 +1,8 @@
+---
+title: "Electron Release Timelines"
+description: ""
+---
+
 # Electron Release Timelines
 
 * The `-beta.1` and `stable` dates are our solid release dates.

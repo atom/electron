@@ -1,3 +1,8 @@
+---
+title: "app"
+description: "Control your application's event lifecycle."
+---
+
 # app
 
 > Control your application's event lifecycle.

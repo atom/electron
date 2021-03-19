@@ -1,3 +1,8 @@
+---
+title: "BrowserWindow"
+description: "Create and control browser windows."
+---
+
 # BrowserWindow
 
 > Create and control browser windows.

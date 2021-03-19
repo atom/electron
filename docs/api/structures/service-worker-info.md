@@ -1,3 +1,8 @@
+---
+title: "ServiceWorkerInfo Object"
+description: ""
+---
+
 # ServiceWorkerInfo Object
 
 * `scriptUrl` String - The full URL to the script that this service worker runs

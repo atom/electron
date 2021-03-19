@@ -1,3 +1,8 @@
+---
+title: "CustomScheme Object"
+description: ""
+---
+
 # CustomScheme Object
 
 * `scheme` String - Custom schemes to be registered with options.

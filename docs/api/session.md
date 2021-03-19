@@ -1,3 +1,8 @@
+---
+title: "session"
+description: "Manage browser sessions, cookies, cache, proxy settings, etc."
+---
+
 # session
 
 > Manage browser sessions, cookies, cache, proxy settings, etc.

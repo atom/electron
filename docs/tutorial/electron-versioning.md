@@ -1,3 +1,8 @@
+---
+title: "Electron Versioning"
+description: "A detailed look at our versioning policy and implementation."
+---
+
 # Electron Versioning
 
 > A detailed look at our versioning policy and implementation.

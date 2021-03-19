@@ -1,3 +1,8 @@
+---
+title: "InputEvent Object"
+description: ""
+---
+
 # InputEvent Object
 
 * `modifiers` String[] (optional) - An array of modifiers of the event, can

@@ -1,3 +1,8 @@
+---
+title: "netLog"
+description: "Logging network events for a session."
+---
+
 # netLog
 
 > Logging network events for a session.

@@ -1,3 +1,8 @@
+---
+title: "Build Instructions (macOS)"
+description: "Follow the guidelines below for building Electron on macOS."
+---
+
 # Build Instructions (macOS)
 
 Follow the guidelines below for building Electron on macOS.

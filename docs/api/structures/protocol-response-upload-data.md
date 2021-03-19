@@ -1,3 +1,8 @@
+---
+title: "ProtocolResponseUploadData Object"
+description: ""
+---
+
 # ProtocolResponseUploadData Object
 
 * `contentType` String - MIME type of the content.

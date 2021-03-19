@@ -1,3 +1,8 @@
+---
+title: "Technical Differences Between Electron and NW.js"
+description: "Like NW.js, Electron provides a platform to write desktop applications with web technologies. Both platforms enable developers to utilize HTML, JavaScript, and Node.js. On the surface, they seem very similar."
+---
+
 # Technical Differences Between Electron and NW.js
 
 Like [NW.js][nwjs], Electron provides a platform to write desktop applications with web

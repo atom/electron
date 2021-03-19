@@ -1,3 +1,8 @@
+---
+title: "Custom Linux Desktop Launcher Actions"
+description: ""
+---
+
 # Custom Linux Desktop Launcher Actions
 
 ## Overview

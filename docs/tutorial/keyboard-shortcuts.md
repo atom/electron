@@ -1,3 +1,8 @@
+---
+title: "Keyboard Shortcuts"
+description: ""
+---
+
 # Keyboard Shortcuts
 
 ## Overview

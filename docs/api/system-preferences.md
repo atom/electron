@@ -1,3 +1,8 @@
+---
+title: "systemPreferences"
+description: "Get system preferences."
+---
+
 # systemPreferences
 
 > Get system preferences.

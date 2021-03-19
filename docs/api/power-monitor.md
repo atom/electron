@@ -1,3 +1,8 @@
+---
+title: "powerMonitor"
+description: "Monitor power state changes."
+---
+
 # powerMonitor
 
 > Monitor power state changes.

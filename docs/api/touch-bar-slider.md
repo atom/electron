@@ -1,3 +1,8 @@
+---
+title: "Class: TouchBarSlider"
+description: "Create a slider in the touch bar for native macOS applications"
+---
+
 ## Class: TouchBarSlider
 
 > Create a slider in the touch bar for native macOS applications

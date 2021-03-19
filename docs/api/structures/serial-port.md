@@ -1,3 +1,8 @@
+---
+title: "SerialPort Object"
+description: ""
+---
+
 # SerialPort Object
 
 * `portId` String - Unique identifier for the port.

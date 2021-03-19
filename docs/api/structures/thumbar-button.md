@@ -1,3 +1,8 @@
+---
+title: "ThumbarButton Object"
+description: ""
+---
+
 # ThumbarButton Object
 
 * `icon` [NativeImage](../native-image.md) - The icon showing in thumbnail

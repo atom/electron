@@ -1,3 +1,8 @@
+---
+title: "Environment Variables"
+description: "Control application configuration and behavior without changing code."
+---
+
 # Environment Variables
 
 > Control application configuration and behavior without changing code.

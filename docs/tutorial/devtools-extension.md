@@ -1,3 +1,8 @@
+---
+title: "DevTools Extension"
+description: "Electron supports Chrome DevTools extensions, which can be used to extend the ability of Chrome's developer tools for debugging popular web frameworks."
+---
+
 # DevTools Extension
 
 Electron supports [Chrome DevTools extensions][devtools-extension], which can

@@ -1,3 +1,8 @@
+---
+title: "ScrubberItem Object"
+description: ""
+---
+
 # ScrubberItem Object
 
 * `label` String (optional) - The text to appear in this item.

@@ -1,3 +1,8 @@
+---
+title: "Source Code Directory Structure"
+description: "The source code of Electron is separated into a few parts, mostly following Chromium on the separation conventions."
+---
+
 # Source Code Directory Structure
 
 The source code of Electron is separated into a few parts, mostly

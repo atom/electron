@@ -1,3 +1,8 @@
+---
+title: "Certificate Object"
+description: ""
+---
+
 # Certificate Object
 
 * `data` String - PEM encoded data

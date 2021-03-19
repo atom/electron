@@ -1,3 +1,8 @@
+---
+title: "autoUpdater"
+description: "Enable apps to automatically update themselves."
+---
+
 # autoUpdater
 
 > Enable apps to automatically update themselves.

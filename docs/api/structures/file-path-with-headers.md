@@ -1,3 +1,8 @@
+---
+title: "FilePathWithHeaders Object"
+description: ""
+---
+
 # FilePathWithHeaders Object
 
 * `path` String - The path to the file to send.

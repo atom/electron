@@ -1,3 +1,8 @@
+---
+title: "Accessibility"
+description: "Making accessible applications is important and we're happy to provide functionality to Devtron and Spectron that gives developers the opportunity to make their apps better for everyone."
+---
+
 # Accessibility
 
 Making accessible applications is important and we're happy to provide

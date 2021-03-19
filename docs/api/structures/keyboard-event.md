@@ -1,3 +1,8 @@
+---
+title: "KeyboardEvent Object"
+description: ""
+---
+
 # KeyboardEvent Object
 
 * `ctrlKey` Boolean (optional) - whether the Control key was used in an accelerator to trigger the Event

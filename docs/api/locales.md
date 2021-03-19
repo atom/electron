@@ -1,3 +1,8 @@
+---
+title: "Locales"
+description: "Locale values returned by app.getLocale()."
+---
+
 # Locales
 
 > Locale values returned by `app.getLocale()`.

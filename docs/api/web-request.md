@@ -1,3 +1,8 @@
+---
+title: "Class: WebRequest"
+description: "Intercept and modify the contents of a request at various stages of its lifetime."
+---
+
 ## Class: WebRequest
 
 > Intercept and modify the contents of a request at various stages of its lifetime.

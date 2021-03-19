@@ -1,3 +1,8 @@
+---
+title: "V8 Development"
+description: "A collection of resources for learning and using V8"
+---
+
 # V8 Development
 
 > A collection of resources for learning and using V8

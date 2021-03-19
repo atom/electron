@@ -1,3 +1,8 @@
+---
+title: "Performance"
+description: "Developers frequently ask about strategies to optimize the performance of Electron applications. Software engineers, consumers, and framework developers do not always agree on one single definition of what "performance" means. This document outlines some of the Electron maintainers' favorite ways to reduce the amount of memory, CPU, and disk resources being used while ensuring that your app is responsive to user input and completes operations as quickly as possible. Furthermore, we want all performance strategies to maintain a high standard for your app's security."
+---
+
 # Performance
 
 Developers frequently ask about strategies to optimize the performance of

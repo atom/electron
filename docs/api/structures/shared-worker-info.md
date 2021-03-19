@@ -1,3 +1,8 @@
+---
+title: "SharedWorkerInfo Object"
+description: ""
+---
+
 # SharedWorkerInfo Object
 
 * `id` String - The unique id of the shared worker.

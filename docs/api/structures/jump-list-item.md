@@ -1,3 +1,8 @@
+---
+title: "JumpListItem Object"
+description: ""
+---
+
 # JumpListItem Object
 
 * `type` String (optional) - One of the following:

@@ -1,3 +1,8 @@
+---
+title: "Class: CommandLine"
+description: "Manipulate the command line arguments for your app that Chromium reads"
+---
+
 ## Class: CommandLine
 
 > Manipulate the command line arguments for your app that Chromium reads

@@ -1,3 +1,8 @@
+---
+title: "Class: MenuItem"
+description: "Add items to native application menus and context menus."
+---
+
 ## Class: MenuItem
 
 > Add items to native application menus and context menus.

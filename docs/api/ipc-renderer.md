@@ -1,3 +1,8 @@
+---
+title: "ipcRenderer"
+description: "Communicate asynchronously from a renderer process to the main process."
+---
+
 # ipcRenderer
 
 > Communicate asynchronously from a renderer process to the main process.

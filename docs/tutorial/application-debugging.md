@@ -1,3 +1,8 @@
+---
+title: "Application Debugging"
+description: "Whenever your Electron application is not behaving the way you wanted it to, an array of debugging tools might help you find coding errors, performance bottlenecks, or optimization opportunities."
+---
+
 # Application Debugging
 
 Whenever your Electron application is not behaving the way you wanted it to,

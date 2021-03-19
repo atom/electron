@@ -1,3 +1,8 @@
+---
+title: "Developing Electron"
+description: "These guides are intended for people working on the Electron project itself. For guides on Electron app development, see /docs/README.md."
+---
+
 # Developing Electron
 
 These guides are intended for people working on the Electron project itself.

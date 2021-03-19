@@ -1,3 +1,8 @@
+---
+title: "Class: Cookies"
+description: "Query and modify a session's cookies."
+---
+
 ## Class: Cookies
 
 > Query and modify a session's cookies.

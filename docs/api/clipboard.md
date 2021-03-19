@@ -1,3 +1,8 @@
+---
+title: "clipboard"
+description: "Perform copy and paste operations on the system clipboard."
+---
+
 # clipboard
 
 > Perform copy and paste operations on the system clipboard.

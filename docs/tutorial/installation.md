@@ -1,3 +1,8 @@
+---
+title: "Installation"
+description: "To install prebuilt Electron binaries, use npm. The preferred method is to install Electron as a development dependency in your app:"
+---
+
 # Installation
 
 To install prebuilt Electron binaries, use [`npm`][npm].

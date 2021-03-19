@@ -1,3 +1,8 @@
+---
+title: "Desktop Environment Integration"
+description: "Different operating systems provide different features for integrating desktop applications into their desktop environments. For example, on Windows, applications can put shortcuts in the JumpList of task bar, and on Mac, applications can put a custom menu in the dock menu."
+---
+
 # Desktop Environment Integration
 
 Different operating systems provide different features for integrating desktop

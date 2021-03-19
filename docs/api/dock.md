@@ -1,3 +1,8 @@
+---
+title: "Class: Dock"
+description: "Control your app in the macOS dock"
+---
+
 ## Class: Dock
 
 > Control your app in the macOS dock

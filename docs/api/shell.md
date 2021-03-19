@@ -1,3 +1,8 @@
+---
+title: "shell"
+description: "Manage files and URLs using their default applications."
+---
+
 # shell
 
 > Manage files and URLs using their default applications.

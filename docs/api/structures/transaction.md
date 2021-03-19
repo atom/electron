@@ -1,3 +1,8 @@
+---
+title: "Transaction Object"
+description: ""
+---
+
 # Transaction Object
 
 * `transactionIdentifier` String - A string that uniquely identifies a successful payment transaction.

@@ -1,3 +1,8 @@
+---
+title: "ShortcutDetails Object"
+description: ""
+---
+
 # ShortcutDetails Object
 
 * `target` String - The target to launch from this shortcut.

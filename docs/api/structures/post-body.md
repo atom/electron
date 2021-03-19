@@ -1,3 +1,8 @@
+---
+title: "PostBody Object"
+description: ""
+---
+
 # PostBody Object
 
 * `data` Array<[PostData](./post-data.md)> - The post data to be sent to the

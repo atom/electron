@@ -1,3 +1,8 @@
+---
+title: "MemoryInfo Object"
+description: ""
+---
+
 # MemoryInfo Object
 
 * `workingSetSize` Integer - The amount of memory currently pinned to actual physical RAM.

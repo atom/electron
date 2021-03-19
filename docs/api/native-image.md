@@ -1,3 +1,8 @@
+---
+title: "nativeImage"
+description: "Create tray, dock, and application icons using PNG or JPG files."
+---
+
 # nativeImage
 
 > Create tray, dock, and application icons using PNG or JPG files.

@@ -1,3 +1,8 @@
+---
+title: "In-App Purchase (macOS)"
+description: ""
+---
+
 # In-App Purchase (macOS)
 
 ## Preparing

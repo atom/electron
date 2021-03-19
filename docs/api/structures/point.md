@@ -1,3 +1,8 @@
+---
+title: "Point Object"
+description: ""
+---
+
 # Point Object
 
 * `x` Number

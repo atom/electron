@@ -1,3 +1,8 @@
+---
+title: "KeyboardInputEvent Object extends `InputEvent`"
+description: ""
+---
+
 # KeyboardInputEvent Object extends `InputEvent`
 
 * `type` String - The type of the event, can be `keyDown`, `keyUp` or `char`.

@@ -1,3 +1,8 @@
+---
+title: "Electron Documentation Style Guide"
+description: "These are the guidelines for writing Electron documentation."
+---
+
 # Electron Documentation Style Guide
 
 These are the guidelines for writing Electron documentation.

@@ -1,3 +1,8 @@
+---
+title: "UploadFile Object"
+description: ""
+---
+
 # UploadFile Object
 
 * `type` String - `file`.
