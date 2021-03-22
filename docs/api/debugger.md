@@ -1,3 +1,8 @@
+---
+title: "Class: Debugger"
+description: "An alternate transport for Chrome's remote debugging protocol."
+---
+
 ## Class: Debugger
 
 > An alternate transport for Chrome's remote debugging protocol.

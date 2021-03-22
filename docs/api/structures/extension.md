@@ -1,3 +1,8 @@
+---
+title: "Extension Object"
+description: ""
+---
+
 # Extension Object
 
 * `id` String

@@ -1,3 +1,8 @@
+---
+title: "ProtocolResponse Object"
+description: ""
+---
+
 # ProtocolResponse Object
 
 * `error` Integer (optional) - When assigned, the `request` will fail with the

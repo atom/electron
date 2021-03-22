@@ -1,3 +1,8 @@
+---
+title: "JumpListCategory Object"
+description: ""
+---
+
 # JumpListCategory Object
 
 * `type` String (optional) - One of the following:

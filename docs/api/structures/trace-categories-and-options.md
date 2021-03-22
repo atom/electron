@@ -1,3 +1,8 @@
+---
+title: "TraceCategoriesAndOptions Object"
+description: ""
+---
+
 # TraceCategoriesAndOptions Object
 
 * `categoryFilter` String - A filter to control what category groups

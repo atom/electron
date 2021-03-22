@@ -1,3 +1,8 @@
+---
+title: "Class: TouchBarSpacer"
+description: "Create a spacer between two items in the touch bar for native macOS applications"
+---
+
 ## Class: TouchBarSpacer
 
 > Create a spacer between two items in the touch bar for native macOS applications

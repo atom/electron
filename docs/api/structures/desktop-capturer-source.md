@@ -1,3 +1,8 @@
+---
+title: "DesktopCapturerSource Object"
+description: ""
+---
+
 # DesktopCapturerSource Object
 
 * `id` String - The identifier of a window or screen that can be used as a

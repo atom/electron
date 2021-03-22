@@ -1,3 +1,8 @@
+---
+title: "inAppPurchase"
+description: "In-app purchases on Mac App Store."
+---
+
 # inAppPurchase
 
 > In-app purchases on Mac App Store.

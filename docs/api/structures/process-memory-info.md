@@ -1,3 +1,8 @@
+---
+title: "ProcessMemoryInfo Object"
+description: ""
+---
+
 # ProcessMemoryInfo Object
 
 * `residentSet` Integer _Linux_ _Windows_ - The amount of memory

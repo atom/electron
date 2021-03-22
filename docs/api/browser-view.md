@@ -1,3 +1,8 @@
+---
+title: "Class: BrowserView"
+description: "Create and control views."
+---
+
 ## Class: BrowserView
 
 > Create and control views.

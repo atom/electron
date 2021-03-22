@@ -1,3 +1,8 @@
+---
+title: "MessageChannelMain"
+description: "MessageChannelMain is the main-process-side equivalent of the DOM MessageChannel object. Its singular function is to create a pair of connected MessagePortMain objects."
+---
+
 # MessageChannelMain
 
 `MessageChannelMain` is the main-process-side equivalent of the DOM

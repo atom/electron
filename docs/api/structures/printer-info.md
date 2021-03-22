@@ -1,3 +1,8 @@
+---
+title: "PrinterInfo Object"
+description: ""
+---
+
 # PrinterInfo Object
 
 * `name` String - the name of the printer as understood by the OS.

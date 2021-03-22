@@ -1,3 +1,8 @@
+---
+title: "Product Object"
+description: ""
+---
+
 # Product Object
 
 * `productIdentifier` String - The string that identifies the product to the Apple App Store.

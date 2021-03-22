@@ -1,3 +1,8 @@
+---
+title: "Class: TouchBar"
+description: "Create TouchBar layouts for native macOS applications"
+---
+
 ## Class: TouchBar
 
 > Create TouchBar layouts for native macOS applications

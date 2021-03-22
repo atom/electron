@@ -1,3 +1,8 @@
+---
+title: "Build Instructions"
+description: "Follow the guidelines below for building Electron."
+---
+
 # Build Instructions
 
 Follow the guidelines below for building Electron.

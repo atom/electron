@@ -1,3 +1,8 @@
+---
+title: "IOCounters Object"
+description: ""
+---
+
 # IOCounters Object
 
 * `readOperationCount` Number - The number of I/O read operations.

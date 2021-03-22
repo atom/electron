@@ -1,3 +1,8 @@
+---
+title: "SharingItem Object"
+description: ""
+---
+
 # SharingItem Object
 
 * `texts` String[] (optional) - An array of text to share.

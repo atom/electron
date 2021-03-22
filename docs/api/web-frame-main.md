@@ -1,3 +1,8 @@
+---
+title: "webFrameMain"
+description: "Control web pages and iframes."
+---
+
 # webFrameMain
 
 > Control web pages and iframes.

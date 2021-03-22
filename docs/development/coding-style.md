@@ -1,3 +1,8 @@
+---
+title: "Coding Style"
+description: "These are the style guidelines for coding in Electron."
+---
+
 # Coding Style
 
 These are the style guidelines for coding in Electron.

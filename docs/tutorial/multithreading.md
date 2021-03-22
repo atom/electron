@@ -1,3 +1,8 @@
+---
+title: "Multithreading"
+description: "With Web Workers, it is possible to run JavaScript in OS-level threads."
+---
+
 # Multithreading
 
 With [Web Workers][web-workers], it is possible to run JavaScript in OS-level

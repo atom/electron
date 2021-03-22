@@ -1,3 +1,8 @@
+---
+title: "`File` Object"
+description: "Use the HTML5 File API to work natively with files on the filesystem."
+---
+
 # `File` Object
 
 > Use the HTML5 `File` API to work natively with files on the filesystem.

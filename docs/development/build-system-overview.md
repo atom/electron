@@ -1,3 +1,8 @@
+---
+title: "Build System Overview"
+description: "Electron uses GN for project generation and ninja for building. Project configurations can be found in the .gn and .gni files."
+---
+
 # Build System Overview
 
 Electron uses [GN](https://gn.googlesource.com/gn) for project generation and

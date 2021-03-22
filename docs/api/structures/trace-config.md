@@ -1,3 +1,8 @@
+---
+title: "TraceConfig Object"
+description: ""
+---
+
 # TraceConfig Object
 
 * `recording_mode` String (optional) - Can be `record-until-full`, `record-continuously`, `record-as-much-as-possible` or `trace-to-console`. Defaults to `record-until-full`.

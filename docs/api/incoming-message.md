@@ -1,3 +1,8 @@
+---
+title: "Class: IncomingMessage"
+description: "Handle responses to HTTP/HTTPS requests."
+---
+
 ## Class: IncomingMessage
 
 > Handle responses to HTTP/HTTPS requests.

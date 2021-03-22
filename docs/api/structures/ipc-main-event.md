@@ -1,3 +1,8 @@
+---
+title: "IpcMainEvent Object extends `Event`"
+description: ""
+---
+
 # IpcMainEvent Object extends `Event`
 
 * `processId` Integer - The internal ID of the renderer process that sent this message

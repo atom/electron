@@ -1,3 +1,8 @@
+---
+title: "Build Instructions (Linux)"
+description: "Follow the guidelines below for building Electron on Linux."
+---
+
 # Build Instructions (Linux)
 
 Follow the guidelines below for building Electron on Linux.

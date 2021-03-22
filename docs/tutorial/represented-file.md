@@ -1,3 +1,8 @@
+---
+title: "Represented File for macOS BrowserWindows"
+description: ""
+---
+
 # Represented File for macOS BrowserWindows
 
 ## Overview

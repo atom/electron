@@ -1,3 +1,8 @@
+---
+title: "Recent Documents (Windows & macOS)"
+description: ""
+---
+
 # Recent Documents (Windows & macOS)
 
 ## Overview

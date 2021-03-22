@@ -1,3 +1,8 @@
+---
+title: "Chrome Extension Support"
+description: "Electron supports a subset of the Chrome Extensions API, primarily to support DevTools extensions and Chromium-internal extensions, but it also happens to support some other extension capabilities."
+---
+
 # Chrome Extension Support
 
 Electron supports a subset of the [Chrome Extensions

@@ -1,3 +1,8 @@
+---
+title: "Class: ServiceWorkers"
+description: "Query and receive events from a sessions active service workers."
+---
+
 ## Class: ServiceWorkers
 
 > Query and receive events from a sessions active service workers.

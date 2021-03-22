@@ -1,3 +1,8 @@
+---
+title: "WebSource Object"
+description: ""
+---
+
 # WebSource Object
 
 * `code` String

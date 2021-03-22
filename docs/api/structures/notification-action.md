@@ -1,3 +1,8 @@
+---
+title: "NotificationAction Object"
+description: ""
+---
+
 # NotificationAction Object
 
 * `type` String - The type of action, can be `button`.

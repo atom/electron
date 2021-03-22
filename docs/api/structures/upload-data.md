@@ -1,3 +1,8 @@
+---
+title: "UploadData Object"
+description: ""
+---
+
 # UploadData Object
 
 * `bytes` Buffer - Content being sent.

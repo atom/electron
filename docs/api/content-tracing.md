@@ -1,3 +1,8 @@
+---
+title: "contentTracing"
+description: "Collect tracing data from Chromium to find performance bottlenecks and slow operations."
+---
+
 # contentTracing
 
 > Collect tracing data from Chromium to find performance bottlenecks and slow operations.

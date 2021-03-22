@@ -1,3 +1,8 @@
+---
+title: "Class: TouchBarLabel"
+description: "Create a label in the touch bar for native macOS applications"
+---
+
 ## Class: TouchBarLabel
 
 > Create a label in the touch bar for native macOS applications

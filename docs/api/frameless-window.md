@@ -1,3 +1,8 @@
+---
+title: "Frameless Window"
+description: "Open a window without toolbars, borders, or other graphical "chrome"."
+---
+
 # Frameless Window
 
 > Open a window without toolbars, borders, or other graphical "chrome".

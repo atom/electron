@@ -1,3 +1,8 @@
+---
+title: "Debugging with XCode"
+description: ""
+---
+
 ## Debugging with XCode
 
 ### Generate xcode project for debugging sources (cannot build code from xcode)

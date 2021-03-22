@@ -1,3 +1,8 @@
+---
+title: "MimeTypedBuffer Object"
+description: ""
+---
+
 # MimeTypedBuffer Object
 
 * `mimeType` String (optional) - MIME type of the buffer.

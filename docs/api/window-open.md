@@ -1,3 +1,8 @@
+---
+title: "Opening windows from the renderer"
+description: "There are several ways to control how windows are created from trusted or untrusted content within a renderer. Windows can be created from the renderer in two ways:"
+---
+
 # Opening windows from the renderer
 
 There are several ways to control how windows are created from trusted or

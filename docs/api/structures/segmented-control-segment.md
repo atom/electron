@@ -1,3 +1,8 @@
+---
+title: "SegmentedControlSegment Object"
+description: ""
+---
+
 # SegmentedControlSegment Object
 
 * `label` String (optional) - The text to appear in this segment.

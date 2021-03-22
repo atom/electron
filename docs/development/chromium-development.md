@@ -1,3 +1,8 @@
+---
+title: "Chromium Development"
+description: "A collection of resources for learning about Chromium and tracking its development"
+---
+
 # Chromium Development
 
 > A collection of resources for learning about Chromium and tracking its development

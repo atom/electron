@@ -1,3 +1,8 @@
+---
+title: "Supported Command Line Switches"
+description: "Command line switches supported by Electron."
+---
+
 # Supported Command Line Switches
 
 > Command line switches supported by Electron.

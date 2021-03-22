@@ -1,3 +1,8 @@
+---
+title: "MemoryUsageDetails Object"
+description: ""
+---
+
 # MemoryUsageDetails Object
 
 * `count` Number

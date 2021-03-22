@@ -1,3 +1,8 @@
+---
+title: "Online/Offline Event Detection"
+description: ""
+---
+
 # Online/Offline Event Detection
 
 ## Overview

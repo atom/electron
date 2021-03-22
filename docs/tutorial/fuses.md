@@ -1,3 +1,8 @@
+---
+title: "Electron Fuses"
+description: "Package time feature toggles"
+---
+
 # Electron Fuses
 
 > Package time feature toggles

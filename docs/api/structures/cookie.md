@@ -1,3 +1,8 @@
+---
+title: "Cookie Object"
+description: ""
+---
+
 # Cookie Object
 
 * `name` String - The name of the cookie.

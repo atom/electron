@@ -1,3 +1,8 @@
+---
+title: "Accelerator"
+description: "Define keyboard shortcuts."
+---
+
 # Accelerator
 
 > Define keyboard shortcuts.

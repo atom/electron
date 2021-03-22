@@ -1,3 +1,8 @@
+---
+title: "Updating Applications"
+description: "There are several ways to update an Electron application. The easiest and officially supported one is taking advantage of the built-in Squirrel framework and Electron's autoUpdater module."
+---
+
 # Updating Applications
 
 There are several ways to update an Electron application. The easiest and

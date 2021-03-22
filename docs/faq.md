@@ -1,3 +1,8 @@
+---
+title: "Electron FAQ"
+description: ""
+---
+
 # Electron FAQ
 
 ## Why am I having trouble installing Electron?

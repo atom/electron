@@ -1,3 +1,8 @@
+---
+title: "IpcRendererEvent Object extends `Event`"
+description: ""
+---
+
 # IpcRendererEvent Object extends `Event`
 
 * `sender` IpcRenderer - The `IpcRenderer` instance that emitted the event originally

@@ -1,3 +1,8 @@
+---
+title: "Class: BrowserWindowProxy"
+description: "Manipulate the child browser window"
+---
+
 ## Class: BrowserWindowProxy
 
 > Manipulate the child browser window

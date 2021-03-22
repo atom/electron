@@ -1,3 +1,8 @@
+---
+title: "PostData Object"
+description: ""
+---
+
 # PostData Object
 
 * `type` String - One of the following:

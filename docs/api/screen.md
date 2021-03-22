@@ -1,3 +1,8 @@
+---
+title: "screen"
+description: "Retrieve information about screen size, displays, cursor position, etc."
+---
+
 # screen
 
 > Retrieve information about screen size, displays, cursor position, etc.

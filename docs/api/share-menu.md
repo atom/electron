@@ -1,3 +1,8 @@
+---
+title: "Class: ShareMenu"
+description: "Create share menu on macOS."
+---
+
 ## Class: ShareMenu
 
 > Create share menu on macOS.

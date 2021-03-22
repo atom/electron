@@ -1,3 +1,8 @@
+---
+title: "Class: TouchBarScrubber"
+description: "Create a scrubber (a scrollable selector)"
+---
+
 ## Class: TouchBarScrubber
 
 > Create a scrubber (a scrollable selector)

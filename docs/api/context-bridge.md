@@ -1,3 +1,8 @@
+---
+title: "contextBridge"
+description: "Create a safe, bi-directional, synchronous bridge across isolated contexts"
+---
+
 # contextBridge
 
 > Create a safe, bi-directional, synchronous bridge across isolated contexts

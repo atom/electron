@@ -1,3 +1,8 @@
+---
+title: "CertificatePrincipal Object"
+description: ""
+---
+
 # CertificatePrincipal Object
 
 * `commonName` String - Common Name.

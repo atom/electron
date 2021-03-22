@@ -1,3 +1,8 @@
+---
+title: "CPUUsage Object"
+description: ""
+---
+
 # CPUUsage Object
 
 * `percentCPUUsage` Number - Percentage of CPU used since the last call to getCPUUsage.

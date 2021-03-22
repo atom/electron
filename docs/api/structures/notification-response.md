@@ -1,3 +1,8 @@
+---
+title: "NotificationResponse Object"
+description: ""
+---
+
 # NotificationResponse Object
 
 * `actionIdentifier` String - The identifier string of the action that the user selected.

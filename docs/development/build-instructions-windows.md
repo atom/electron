@@ -1,3 +1,8 @@
+---
+title: "Build Instructions (Windows)"
+description: "Follow the guidelines below for building Electron on Windows."
+---
+
 # Build Instructions (Windows)
 
 Follow the guidelines below for building Electron on Windows.

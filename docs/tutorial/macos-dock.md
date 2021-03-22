@@ -1,3 +1,8 @@
+---
+title: "macOS Dock"
+description: ""
+---
+
 # macOS Dock
 
 ## Overview

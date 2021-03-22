@@ -1,3 +1,8 @@
+---
+title: "Class: TouchBarSegmentedControl"
+description: "Create a segmented control (a button group) where one button has a selected state"
+---
+
 ## Class: TouchBarSegmentedControl
 
 > Create a segmented control (a button group) where one button has a selected state

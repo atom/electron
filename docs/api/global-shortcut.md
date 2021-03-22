@@ -1,3 +1,8 @@
+---
+title: "globalShortcut"
+description: "Detect keyboard events when the application does not have keyboard focus."
+---
+
 # globalShortcut
 
 > Detect keyboard events when the application does not have keyboard focus.

@@ -1,3 +1,8 @@
+---
+title: "MouseInputEvent Object extends `InputEvent`"
+description: ""
+---
+
 # MouseInputEvent Object extends `InputEvent`
 
 * `type` String - The type of the event, can be `mouseDown`,

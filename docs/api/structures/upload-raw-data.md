@@ -1,3 +1,8 @@
+---
+title: "UploadRawData Object"
+description: ""
+---
+
 # UploadRawData Object
 
 * `type` String - `rawData`.

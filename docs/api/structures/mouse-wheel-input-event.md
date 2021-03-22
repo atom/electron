@@ -1,3 +1,8 @@
+---
+title: "MouseWheelInputEvent Object extends `MouseInputEvent`"
+description: ""
+---
+
 # MouseWheelInputEvent Object extends `MouseInputEvent`
 
 * `type` String - The type of the event, can be `mouseWheel`.

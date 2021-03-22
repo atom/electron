@@ -1,3 +1,8 @@
+---
+title: "Class: TouchBarPopover"
+description: "Create a popover in the touch bar for native macOS applications"
+---
+
 ## Class: TouchBarPopover
 
 > Create a popover in the touch bar for native macOS applications
