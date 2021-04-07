@@ -1297,7 +1297,8 @@ void WebContents::FindReply(content::WebContents* web_contents,
                             int number_of_matches,
                             const gfx::Rect& selection_rect,
                             int active_match_ordinal,
-                            bool final_update) {
+                            bool final_update,
+                            content::RenderFrameHost* target_rfh) {
   if (!final_update)
     return;
 
@@ -1310,7 +1311,13 @@ void WebContents::FindReply(content::WebContents* web_contents,
   result.Set("selectionArea", selection_rect);
   result.Set("activeMatchOrdinal", active_match_ordinal);
   result.Set("finalUpdate", final_update);  // Deprecate after 2.0
-  Emit("found-in-page", result.GetHandle());
+  if (target_rfh) {
+    gin::Handle<WebFrameMain> web_frame_main =
+        WebFrameMain::From(isolate, target_rfh);
+    web_frame_main->Emit("found-in-frame", result.GetHandle());
+  } else {
+    Emit("found-in-page", result.GetHandle());
+  }
 }
 
 bool WebContents::CheckMediaAccessPermission(
