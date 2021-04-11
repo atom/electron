@@ -32,12 +32,19 @@ enum class ProtocolType {
 };
 
 using StartLoadingCallback = base::OnceCallback<void(gin::Arguments*)>;
+using RunDefaultLoaderCallback = base::OnceCallback<void(gin::Arguments*)>;
 using ProtocolHandler =
     base::Callback<void(const network::ResourceRequest&, StartLoadingCallback)>;
+using InterceptProtocolHandler =
+    base::Callback<void(const network::ResourceRequest&,
+                        StartLoadingCallback,
+                        RunDefaultLoaderCallback)>;
 
 // scheme => (type, handler).
 using HandlersMap =
     std::map<std::string, std::pair<ProtocolType, ProtocolHandler>>;
+using InterceptHandlersMap =
+    std::map<std::string, std::pair<ProtocolType, InterceptProtocolHandler>>;
 
 // Implementation of URLLoaderFactory.
 class ElectronURLLoaderFactory : public network::SelfDeletingURLLoaderFactory {
@@ -65,7 +72,7 @@ class ElectronURLLoaderFactory : public network::SelfDeletingURLLoaderFactory {
       const network::ResourceRequest& request,
       mojo::PendingRemote<network::mojom::URLLoaderClient> client,
       const net::MutableNetworkTrafficAnnotationTag& traffic_annotation,
-      mojo::PendingRemote<network::mojom::URLLoaderFactory> proxy_factory,
+      mojo::PendingRemote<network::mojom::URLLoaderFactory> interceptor_factory,
       ProtocolType type,
       gin::Arguments* args);
 

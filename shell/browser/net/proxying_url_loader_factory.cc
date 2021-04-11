@@ -6,8 +6,6 @@
 
 #include <utility>
 
-#include "base/command_line.h"
-#include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
 #include "content/public/browser/browser_context.h"
 #include "extensions/browser/extension_navigation_ui_data.h"
@@ -17,7 +15,6 @@
 #include "services/metrics/public/cpp/ukm_source_id.h"
 #include "services/network/public/cpp/features.h"
 #include "shell/browser/net/asar/asar_url_loader.h"
-#include "shell/common/options_switches.h"
 
 namespace electron {
 
@@ -743,18 +740,17 @@ void ProxyingURLLoaderFactory::InProgressRequest::OnRequestError(
 
 ProxyingURLLoaderFactory::ProxyingURLLoaderFactory(
     WebRequestAPI* web_request_api,
-    const HandlersMap& intercepted_handlers,
     int render_process_id,
     uint64_t* request_id_generator,
     std::unique_ptr<extensions::ExtensionNavigationUIData> navigation_ui_data,
     base::Optional<int64_t> navigation_id,
-    network::mojom::URLLoaderFactoryRequest loader_request,
+    mojo::PendingReceiver<network::mojom::URLLoaderFactory>
+        interceptor_receiver,
     mojo::PendingRemote<network::mojom::URLLoaderFactory> target_factory_remote,
     mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
         header_client_receiver,
     content::ContentBrowserClient::URLLoaderFactoryType loader_factory_type)
     : web_request_api_(web_request_api),
-      intercepted_handlers_(intercepted_handlers),
       render_process_id_(render_process_id),
       request_id_generator_(request_id_generator),
       navigation_ui_data_(std::move(navigation_ui_data)),
@@ -763,30 +759,15 @@ ProxyingURLLoaderFactory::ProxyingURLLoaderFactory(
   target_factory_.Bind(std::move(target_factory_remote));
   target_factory_.set_disconnect_handler(base::BindOnce(
       &ProxyingURLLoaderFactory::OnTargetFactoryError, base::Unretained(this)));
-  proxy_receivers_.Add(this, std::move(loader_request));
+  proxy_receivers_.Add(this, std::move(interceptor_receiver));
   proxy_receivers_.set_disconnect_handler(base::BindRepeating(
       &ProxyingURLLoaderFactory::OnProxyBindingError, base::Unretained(this)));
 
   if (header_client_receiver)
     url_loader_header_client_receiver_.Bind(std::move(header_client_receiver));
-
-  ignore_connections_limit_domains_ = base::SplitString(
-      base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
-          switches::kIgnoreConnectionsLimit),
-      ",", base::TRIM_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
 }
 
 ProxyingURLLoaderFactory::~ProxyingURLLoaderFactory() = default;
-
-bool ProxyingURLLoaderFactory::ShouldIgnoreConnectionsLimit(
-    const network::ResourceRequest& request) {
-  for (const auto& domain : ignore_connections_limit_domains_) {
-    if (request.url.DomainIs(domain)) {
-      return true;
-    }
-  }
-  return false;
-}
 
 void ProxyingURLLoaderFactory::CreateLoaderAndStart(
     mojo::PendingReceiver<network::mojom::URLLoader> loader,
@@ -798,27 +779,6 @@ void ProxyingURLLoaderFactory::CreateLoaderAndStart(
     const net::MutableNetworkTrafficAnnotationTag& traffic_annotation) {
   // Take a copy so we can mutate the request.
   network::ResourceRequest request = original_request;
-
-  if (ShouldIgnoreConnectionsLimit(request)) {
-    request.priority = net::RequestPriority::MAXIMUM_PRIORITY;
-    request.load_flags |= net::LOAD_IGNORE_LIMITS;
-  }
-
-  // Check if user has intercepted this scheme.
-  auto it = intercepted_handlers_.find(request.url.scheme());
-  if (it != intercepted_handlers_.end()) {
-    mojo::PendingRemote<network::mojom::URLLoaderFactory> loader_remote;
-    this->Clone(loader_remote.InitWithNewPipeAndPassReceiver());
-
-    // <scheme, <type, handler>>
-    it->second.second.Run(
-        request,
-        base::BindOnce(&ElectronURLLoaderFactory::StartLoading,
-                       std::move(loader), routing_id, request_id, options,
-                       request, std::move(client), traffic_annotation,
-                       std::move(loader_remote), it->second.first));
-    return;
-  }
 
   // The loader of ServiceWorker forbids loading scripts from file:// URLs, and
   // Chromium does not provide a way to override this behavior. So in order to
