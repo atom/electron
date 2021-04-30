@@ -79,6 +79,9 @@ class ElectronBrowserContext : public content::BrowserContext {
       bool in_memory,
       base::DictionaryValue options = base::DictionaryValue());
 
+  static ElectronBrowserContext* FromBrowserContext(
+      content::BrowserContext* browser_context);
+
   static BrowserContextMap& browser_context_map();
 
   void SetUserAgent(const std::string& user_agent);

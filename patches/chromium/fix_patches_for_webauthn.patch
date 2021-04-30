@@ -1,0 +1,63 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Sential <sentialx@gmail.com>
+Date: Thu, 18 Mar 2021 21:05:59 +0100
+Subject: fix: patches for webauthn
+
+Replaces chrome/grit to electron/grit
+
+diff --git a/chrome/browser/ui/views/chrome_typography.cc b/chrome/browser/ui/views/chrome_typography.cc
+index de00af3356d6a7bc7f8373d56cab005b262555b3..6b6ef8abde82af93698bfabc2dc577854b8d604d 100644
+--- a/chrome/browser/ui/views/chrome_typography.cc
++++ b/chrome/browser/ui/views/chrome_typography.cc
+@@ -5,7 +5,6 @@
+ #include "chrome/browser/ui/views/chrome_typography.h"
+ 
+ #include "build/build_config.h"
+-#include "chrome/browser/ui/views/location_bar/location_bar_view.h"
+ #include "ui/base/default_style.h"
+ #include "ui/base/pointer/touch_ui_controller.h"
+ #include "ui/base/resource/resource_bundle.h"
+@@ -75,7 +74,8 @@ void ApplyCommonFontStyles(int context,
+     case CONTEXT_OMNIBOX_DEEMPHASIZED: {
+       const int omnibox_primary_delta =
+           GetFontSizeDeltaBoundedByAvailableHeight(
+-              LocationBarView::GetAvailableTextHeight(),
++              // LocationBarView::GetAvailableTextHeight(),
++              ui::TouchUiController::Get()->touch_ui() ? 15 : 14,
+               ui::TouchUiController::Get()->touch_ui() ? 15 : 14);
+       details.size_delta = omnibox_primary_delta;
+       if (context == CONTEXT_OMNIBOX_DEEMPHASIZED)
+@@ -90,7 +90,8 @@ void ApplyCommonFontStyles(int context,
+       // so don't bother starting at 14.
+       const int omnibox_decoration_delta =
+           GetFontSizeDeltaBoundedByAvailableHeight(
+-              LocationBarView::GetAvailableDecorationTextHeight(), 11);
++              // LocationBarView::GetAvailableDecorationTextHeight()
++              11, 11);
+       details.size_delta = omnibox_decoration_delta;
+       break;
+     }
+diff --git a/chrome/browser/webauthn/chrome_authenticator_request_delegate.h b/chrome/browser/webauthn/chrome_authenticator_request_delegate.h
+index 49bbabf3d1c3ef01d05164a64dc088d3164fd903..07a88aca44f64d890d48f8545e95449f3b833901 100644
+--- a/chrome/browser/webauthn/chrome_authenticator_request_delegate.h
++++ b/chrome/browser/webauthn/chrome_authenticator_request_delegate.h
+@@ -22,7 +22,9 @@
+ #include "device/fido/fido_request_handler_base.h"
+ #include "device/fido/fido_transport_protocol.h"
+ 
+-class Profile;
++namespace electron {
++class ElectronBrowserContext;
++}
+ 
+ namespace content {
+ class BrowserContext;
+@@ -45,7 +47,7 @@ class ChromeAuthenticatorRequestDelegate
+   static void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry);
+ #if defined(OS_MAC)
+   static TouchIdAuthenticatorConfig TouchIdAuthenticatorConfigForProfile(
+-      Profile* profile);
++      electron::ElectronBrowserContext* profile);
+ #endif  // defined(OS_MAC)
+ 
+   // The |render_frame_host| must outlive this instance.
