@@ -2059,12 +2059,7 @@ describe('webContents module', () => {
 
   describe('frame-dom-ready event', () => {
     it('emits for top-level frame', async () => {
-      const w = new BrowserWindow({
-        show: false,
-        webPreferences: {
-          sandbox: true
-        }
-      });
+      const w = new BrowserWindow({ show: false });
       const promise = emittedOnce(w.webContents, 'frame-dom-ready');
       w.webContents.loadURL('about:blank');
       const [, frame] = await promise;
@@ -2072,12 +2067,7 @@ describe('webContents module', () => {
     });
 
     it('emits for sub frame', async () => {
-      const w = new BrowserWindow({
-        show: false,
-        webPreferences: {
-          sandbox: true
-        }
-      });
+      const w = new BrowserWindow({ show: false });
       const promise = new Promise<void>(resolve => {
         w.webContents.on('frame-dom-ready', (e, frame) => {
           if (frame.name === 'frameA') {
