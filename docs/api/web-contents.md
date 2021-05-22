@@ -114,7 +114,16 @@ Returns:
 
 * `event` Event
 
-Emitted when the document in the given frame is loaded.
+Emitted when the document in the top-level frame is loaded.
+
+#### Event: 'frame-dom-ready'
+
+Returns:
+
+* `event` Event
+* `frame` WebFrameMain
+
+Emitted when the document in the either the top-level frame or a sub frame is loaded.
 
 #### Event: 'page-title-updated'
 
@@ -1990,11 +1999,6 @@ when the DevTools has been closed.
 
 A [`Debugger`](debugger.md) instance for this webContents.
 
-[keyboardevent]: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent
-[event-emitter]: https://nodejs.org/api/events.html#events_class_eventemitter
-[SCA]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
-[`postMessage`]: https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage
-
 #### `contents.backgroundThrottling`
 
 A `Boolean` property that determines whether or not this WebContents will throttle animations and timers
@@ -2003,3 +2007,8 @@ when the page becomes backgrounded. This also affects the Page Visibility API.
 #### `contents.mainFrame` _Readonly_
 
 A [`WebFrameMain`](web-frame-main.md) property that represents the top frame of the page's frame hierarchy.
+
+[keyboardevent]: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent
+[event-emitter]: https://nodejs.org/api/events.html#events_class_eventemitter
+[SCA]: https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
+[`postMessage`]: https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage
