@@ -2056,27 +2056,4 @@ describe('webContents module', () => {
     expect(wasCalled).to.equal(false);
     await closeAllWindows();
   });
-
-  describe('frame-dom-ready event', () => {
-    it('emits for top-level frame', async () => {
-      const w = new BrowserWindow({ show: false });
-      const promise = emittedOnce(w.webContents, 'frame-dom-ready');
-      w.webContents.loadURL('about:blank');
-      const [, frame] = await promise;
-      expect(frame).to.equal(w.webContents.mainFrame);
-    });
-
-    it('emits for sub frame', async () => {
-      const w = new BrowserWindow({ show: false });
-      const promise = new Promise<void>(resolve => {
-        w.webContents.on('frame-dom-ready', (e, frame) => {
-          if (frame.name === 'frameA') {
-            resolve();
-          }
-        });
-      });
-      w.webContents.loadURL(path.join(mainFixturesPath, 'sub-frames/frame-with-frame.html'));
-      await promise;
-    });
-  });
 });

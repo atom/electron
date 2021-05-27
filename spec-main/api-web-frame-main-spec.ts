@@ -233,4 +233,28 @@ describe('webFrameMain module', () => {
       }
     });
   });
+
+  describe('"dom-ready" event', () => {
+    it('emits for top-level frame', async () => {
+      const w = new BrowserWindow({ show: false });
+      const promise = emittedOnce(w.webContents.mainFrame, 'dom-ready');
+      w.webContents.loadURL('about:blank');
+      await promise;
+    });
+
+    it('emits for sub frame', async () => {
+      const w = new BrowserWindow({ show: false });
+      const promise = new Promise<void>(resolve => {
+        w.webContents.on('frame-created', (e, { frame }) => {
+          frame.on('dom-ready', () => {
+            if (frame.name === 'frameA') {
+              resolve();
+            }
+          });
+        });
+      });
+      w.webContents.loadFile(path.join(subframesPath, 'frame-with-frame.html'));
+      await promise;
+    });
+  });
 });
