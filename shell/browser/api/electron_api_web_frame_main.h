@@ -13,6 +13,7 @@
 #include "gin/handle.h"
 #include "gin/wrappable.h"
 #include "mojo/public/cpp/bindings/remote.h"
+#include "shell/browser/event_emitter_mixin.h"
 #include "shell/common/gin_helper/constructible.h"
 #include "shell/common/gin_helper/pinnable.h"
 #include "third_party/blink/public/mojom/page/page_visibility_state.mojom-forward.h"
@@ -37,6 +38,7 @@ namespace api {
 
 // Bindings for accessing frames from the main process.
 class WebFrameMain : public gin::Wrappable<WebFrameMain>,
+                     public gin_helper::EventEmitterMixin<WebFrameMain>,
                      public gin_helper::Pinnable<WebFrameMain>,
                      public gin_helper::Constructible<WebFrameMain> {
  public:
@@ -54,6 +56,7 @@ class WebFrameMain : public gin::Wrappable<WebFrameMain>,
   // may be holding a weak reference.
   static void RenderFrameDeleted(content::RenderFrameHost* rfh);
   static void RenderFrameCreated(content::RenderFrameHost* rfh);
+  static void DOMContentLoaded(content::RenderFrameHost* rfh);
 
   // Mark RenderFrameHost as disposed and to no longer access it. This can
   // occur upon frame navigation.
@@ -77,6 +80,7 @@ class WebFrameMain : public gin::Wrappable<WebFrameMain>,
   // whether its been disposed of prior to accessing it.
   bool CheckRenderFrame() const;
   void Connect();
+  void DOMContentLoaded();
 
   v8::Local<v8::Promise> ExecuteJavaScript(gin::Arguments* args,
                                            const std::u16string& code);

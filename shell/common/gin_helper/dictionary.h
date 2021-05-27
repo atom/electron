@@ -109,6 +109,24 @@ class Dictionary : public gin::Dictionary {
         .ToChecked();
   }
 
+  template <typename K, typename V>
+  v8::Maybe<bool> SetGetter(const K& key, const V& val) {
+    auto context = isolate()->GetCurrentContext();
+    auto v8_external = v8::External::New(isolate(), val);
+    return GetHandle()->SetAccessor(
+        context, gin::StringToV8(isolate(), key),
+        [](v8::Local<v8::Name> property_name,
+           const v8::PropertyCallbackInfo<v8::Value>& info) {
+          auto* v8_external = static_cast<v8::External*>(*info.Data());
+          auto val = static_cast<V>(v8_external->Value());
+
+          v8::Local<v8::Value> v8_value;
+          if (gin::TryConvertToV8(info.GetIsolate(), val, &v8_value))
+            info.GetReturnValue().Set(v8_value);
+        },
+        NULL, v8_external);
+  }
+
   template <typename T>
   bool SetReadOnly(base::StringPiece key, const T& val) {
     v8::Local<v8::Value> v8_value;

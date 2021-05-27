@@ -1388,13 +1388,19 @@ void WebContents::HandleNewRenderFrame(
       static_cast<content::RenderWidgetHostImpl*>(rwhv->GetRenderWidgetHost());
   if (rwh_impl)
     rwh_impl->disable_hidden_ = !background_throttling_;
-
-  WebFrameMain::RenderFrameCreated(render_frame_host);
 }
 
 void WebContents::RenderFrameCreated(
     content::RenderFrameHost* render_frame_host) {
   HandleNewRenderFrame(render_frame_host);
+
+  WebFrameMain::RenderFrameCreated(render_frame_host);
+
+  v8::Isolate* isolate = JavascriptEnvironment::GetIsolate();
+  v8::HandleScope handle_scope(isolate);
+  gin_helper::Dictionary details = gin_helper::Dictionary::CreateEmpty(isolate);
+  details.SetGetter("frame", render_frame_host);
+  Emit("frame-created", details);
 }
 
 void WebContents::RenderViewDeleted(content::RenderViewHost* render_view_host) {
@@ -1473,7 +1479,7 @@ void WebContents::DidAcquireFullscreen(content::RenderFrameHost* rfh) {
 
 void WebContents::DOMContentLoaded(
     content::RenderFrameHost* render_frame_host) {
-  Emit("frame-dom-ready", render_frame_host);
+  WebFrameMain::DOMContentLoaded(render_frame_host);
   if (!render_frame_host->GetParent())
     Emit("dom-ready");
 }

@@ -116,15 +116,6 @@ Returns:
 
 Emitted when the document in the top-level frame is loaded.
 
-#### Event: 'frame-dom-ready'
-
-Returns:
-
-* `event` Event
-* `frame` WebFrameMain
-
-Emitted when the document in the either the top-level frame or a sub frame is loaded.
-
 #### Event: 'page-title-updated'
 
 Returns:
@@ -862,6 +853,16 @@ Emitted when the `WebContents` preferred size has changed.
 
 This event will only be emitted when `enablePreferredSizeMode` is set to `true`
 in `webPreferences`.
+
+#### Event: 'frame-created'
+
+Returns:
+
+* `event` Event
+* `details` Object
+  * `frame` WebFrameMain
+
+Emitted when an `<iframe>` is loaded within the main page or a nested `<iframe>`.
 
 ### Instance Methods
 

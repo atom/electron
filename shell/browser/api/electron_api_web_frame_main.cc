@@ -337,11 +337,21 @@ void WebFrameMain::RenderFrameCreated(content::RenderFrameHost* rfh) {
     web_frame->Connect();
 }
 
+void WebFrameMain::DOMContentLoaded(content::RenderFrameHost* rfh) {
+  auto* web_frame = FromRenderFrameHost(rfh);
+  if (web_frame)
+    web_frame->DOMContentLoaded();
+}
+
 void WebFrameMain::Connect() {
   if (pending_receiver_) {
     render_frame_->GetRemoteInterfaces()->GetInterface(
         std::move(pending_receiver_));
   }
+}
+
+void WebFrameMain::DOMContentLoaded() {
+  Emit("dom-ready");
 }
 
 // static
