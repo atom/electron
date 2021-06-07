@@ -1,0 +1,23 @@
+#ifndef SHELL_COMMON_GIN_HELPER_ACCESSOR_H_
+#define SHELL_COMMON_GIN_HELPER_ACCESSOR_H_
+
+namespace gin_helper {
+
+// Wrapper for a generic value to be used as an accessor in a
+// gin_helper::Dictionary.
+template <typename T>
+struct AccessorValue {
+  T Value;
+};
+template <typename T>
+struct AccessorValue<const T&> {
+  T Value;
+};
+template <typename T>
+struct AccessorValue<const T*> {
+  T* Value;
+};
+
+}  // namespace gin_helper
+
+#endif  // SHELL_COMMON_GIN_HELPER_ACCESSOR_H_
