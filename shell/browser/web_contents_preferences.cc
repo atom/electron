@@ -162,7 +162,6 @@ WebContentsPreferences::WebContentsPreferences(
   SetDefaultBoolIfUndefined(options::kDisableHtmlFullscreenWindowResize, false);
   SetDefaultBoolIfUndefined(options::kWebviewTag, false);
   SetDefaultBoolIfUndefined(options::kSandbox, false);
-  SetDefaultBoolIfUndefined(options::kNativeWindowOpen, true);
   SetDefaultBoolIfUndefined(options::kContextIsolation, true);
   SetDefaultBoolIfUndefined(options::kJavaScript, true);
   SetDefaultBoolIfUndefined(options::kImages, true);
@@ -214,10 +213,6 @@ WebContentsPreferences::~WebContentsPreferences() {
 }
 
 void WebContentsPreferences::SetDefaults() {
-  if (IsEnabled(options::kSandbox)) {
-    SetBool(options::kNativeWindowOpen, true);
-  }
-
   last_preference_ = preference_.Clone();
 }
 
@@ -449,11 +444,6 @@ void WebContentsPreferences::OverrideWebkitPrefs(
     prefs->background_color = "#fff";
   }
 
-  // Pass the opener's window id.
-  int opener_id;
-  if (GetAsInteger(&preference_, options::kOpenerID, &opener_id))
-    prefs->opener_id = opener_id;
-
   // Run Electron APIs and preload script in isolated world
   prefs->context_isolation = IsEnabled(options::kContextIsolation, true);
 
@@ -487,9 +477,6 @@ void WebContentsPreferences::OverrideWebkitPrefs(
 
   // The preload script.
   GetPreloadPath(&prefs->preload);
-
-  // Check if nativeWindowOpen is enabled.
-  prefs->native_window_open = IsEnabled(options::kNativeWindowOpen, true);
 
   // Check if we have node integration specified.
   prefs->node_integration = IsEnabled(options::kNodeIntegration);
