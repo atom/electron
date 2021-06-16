@@ -36,6 +36,8 @@ namespace electron {
 
 namespace api {
 
+class WebContents;
+
 // Bindings for accessing frames from the main process.
 class WebFrameMain : public gin::Wrappable<WebFrameMain>,
                      public gin_helper::EventEmitterMixin<WebFrameMain>,
@@ -51,18 +53,7 @@ class WebFrameMain : public gin::Wrappable<WebFrameMain>,
   static gin::Handle<WebFrameMain> From(
       v8::Isolate* isolate,
       content::RenderFrameHost* render_frame_host);
-
-  // Called to mark any RenderFrameHost as disposed by any WebFrameMain that
-  // may be holding a weak reference.
-  static void RenderFrameDeleted(content::RenderFrameHost* rfh);
-  static void RenderFrameCreated(content::RenderFrameHost* rfh);
-  static void DOMContentLoaded(content::RenderFrameHost* rfh);
-
-  // Mark RenderFrameHost as disposed and to no longer access it. This can
-  // occur upon frame navigation.
-  void MarkRenderFrameDisposed();
-
-  const mojo::Remote<mojom::ElectronRenderer>& GetRendererApi();
+  static WebFrameMain* From(content::RenderFrameHost* render_frame_host);
 
   // gin::Wrappable
   static gin::WrapperInfo kWrapperInfo;
@@ -76,11 +67,20 @@ class WebFrameMain : public gin::Wrappable<WebFrameMain>,
   ~WebFrameMain() override;
 
  private:
+  friend class WebContents;
+
+  // Mark RenderFrameHost as disposed and to no longer access it. This can
+  // occur upon frame navigation.
+  void MarkRenderFrameDisposed();
+
+  const mojo::Remote<mojom::ElectronRenderer>& GetRendererApi();
+
+  void DOMContentLoaded();
+
   // WebFrameMain can outlive its RenderFrameHost pointer so we need to check
   // whether its been disposed of prior to accessing it.
   bool CheckRenderFrame() const;
   void Connect();
-  void DOMContentLoaded();
 
   v8::Local<v8::Promise> ExecuteJavaScript(gin::Arguments* args,
                                            const std::u16string& code);

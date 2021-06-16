@@ -1394,7 +1394,9 @@ void WebContents::RenderFrameCreated(
     content::RenderFrameHost* render_frame_host) {
   HandleNewRenderFrame(render_frame_host);
 
-  WebFrameMain::RenderFrameCreated(render_frame_host);
+  auto* web_frame = WebFrameMain::From(render_frame_host);
+  if (web_frame)
+    web_frame->Connect();
 
   v8::Isolate* isolate = JavascriptEnvironment::GetIsolate();
   v8::HandleScope handle_scope(isolate);
@@ -1479,7 +1481,10 @@ void WebContents::DidAcquireFullscreen(content::RenderFrameHost* rfh) {
 
 void WebContents::DOMContentLoaded(
     content::RenderFrameHost* render_frame_host) {
-  WebFrameMain::DOMContentLoaded(render_frame_host);
+  auto* web_frame = WebFrameMain::From(render_frame_host);
+  if (web_frame)
+    web_frame->DOMContentLoaded();
+
   if (!render_frame_host->GetParent())
     Emit("dom-ready");
 }
@@ -1649,7 +1654,9 @@ void WebContents::RenderFrameDeleted(
     content::RenderFrameHost* render_frame_host) {
   // A WebFrameMain can outlive its RenderFrameHost so we need to mark it as
   // disposed to prevent access to it.
-  WebFrameMain::RenderFrameDeleted(render_frame_host);
+  auto* web_frame = WebFrameMain::From(render_frame_host);
+  if (web_frame)
+    web_frame->MarkRenderFrameDisposed();
 }
 
 void WebContents::DidStartNavigation(
