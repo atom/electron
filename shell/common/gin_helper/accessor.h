@@ -1,3 +1,7 @@
+// Copyright (c) 2021 Samuel Maddock <sam@samuelmaddock.com>.
+// Use of this source code is governed by the MIT license that can be
+// found in the LICENSE file.
+
 #ifndef SHELL_COMMON_GIN_HELPER_ACCESSOR_H_
 #define SHELL_COMMON_GIN_HELPER_ACCESSOR_H_
 

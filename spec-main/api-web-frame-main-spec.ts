@@ -257,4 +257,30 @@ describe('webFrameMain module', () => {
       await promise;
     });
   });
+
+  describe('"destroyed" event', () => {
+    it('emits when parent WebContents is destroyed', async () => {
+      const w = new BrowserWindow({ show: false });
+      await w.loadURL('about:blank');
+      const { mainFrame } = w.webContents;
+      expect(mainFrame.isDestroyed()).to.be.false();
+      const promise = emittedOnce(mainFrame, 'destroyed');
+      w.destroy();
+      await promise;
+      expect(mainFrame.isDestroyed()).to.be.true();
+
+      // All properties should throw beyond this point.
+      expect(() => mainFrame.url).to.throw();
+    });
+
+    it('emits when frame DOM node is removed', async () => {
+      const w = new BrowserWindow({ show: false });
+      await w.loadFile(path.join(subframesPath, 'frame-with-frame.html'));
+      const nestedFrame = w.webContents.mainFrame.frames[0];
+      expect(nestedFrame).to.exist();
+      const promise = emittedOnce(nestedFrame, 'destroyed');
+      w.webContents.mainFrame.executeJavaScript("document.querySelector('iframe').remove()");
+      await promise;
+    });
+  });
 });

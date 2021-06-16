@@ -73,6 +73,14 @@ _This class is not exported from the `'electron'` module. It is only available a
 
 ### Instance Events
 
+#### Event: 'destroyed'
+
+Returns:
+
+* `event` Event
+
+Emitted when the frame has been destroyed.
+
 #### Event: 'dom-ready'
 
 Returns:
@@ -82,6 +90,10 @@ Returns:
 Emitted when the document is loaded.
 
 ### Instance Methods
+
+#### `frame.isDestroyed()`
+
+Returns `boolean` - Whether the frame is destroyed.
 
 #### `frame.executeJavaScript(code[, userGesture])`
 

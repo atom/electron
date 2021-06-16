@@ -73,14 +73,11 @@ class WebFrameMain : public gin::Wrappable<WebFrameMain>,
   // occur upon frame navigation.
   void MarkRenderFrameDisposed();
 
-  const mojo::Remote<mojom::ElectronRenderer>& GetRendererApi();
-
-  void DOMContentLoaded();
-
   // WebFrameMain can outlive its RenderFrameHost pointer so we need to check
   // whether its been disposed of prior to accessing it.
   bool CheckRenderFrame() const;
-  void Connect();
+
+  const mojo::Remote<mojom::ElectronRenderer>& GetRendererApi();
 
   v8::Local<v8::Promise> ExecuteJavaScript(gin::Arguments* args,
                                            const std::u16string& code);
@@ -93,6 +90,8 @@ class WebFrameMain : public gin::Wrappable<WebFrameMain>,
                    const std::string& channel,
                    v8::Local<v8::Value> message_value,
                    absl::optional<v8::Local<v8::Value>> transfer);
+
+  bool IsDestroyed() const;
 
   int FrameTreeNodeID() const;
   std::string Name() const;
@@ -108,6 +107,9 @@ class WebFrameMain : public gin::Wrappable<WebFrameMain>,
   std::vector<content::RenderFrameHost*> FramesInSubtree() const;
 
   void OnRendererConnectionError();
+  void Connect();
+  void OnDeleted();
+  void DOMContentLoaded();
 
   mojo::Remote<mojom::ElectronRenderer> renderer_api_;
   mojo::PendingReceiver<mojom::ElectronRenderer> pending_receiver_;

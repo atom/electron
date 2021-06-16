@@ -1656,7 +1656,7 @@ void WebContents::RenderFrameDeleted(
   // disposed to prevent access to it.
   auto* web_frame = WebFrameMain::From(render_frame_host);
   if (web_frame)
-    web_frame->MarkRenderFrameDisposed();
+    web_frame->OnDeleted();
 }
 
 void WebContents::DidStartNavigation(
