@@ -81,6 +81,13 @@ Returns:
 
 Emitted when the frame has been destroyed.
 
+This can occur for a variety of reasons:
+
+* If the frame is an `<iframe>`, when its DOM node is removed.
+* When navigating away the page containing the frame.
+* When the parent `WebContents` is destroyed.
+* When the parent `BrowserWindow` is destroyed.
+
 #### Event: 'dom-ready'
 
 Returns:
