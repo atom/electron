@@ -25,7 +25,7 @@ v8::Local<v8::Value>
 Converter<gin_helper::AccessorValue<content::RenderFrameHost*>>::ToV8(
     v8::Isolate* isolate,
     gin_helper::AccessorValue<content::RenderFrameHost*> val) {
-  auto* rfh = val.Value;
+  content::RenderFrameHost* rfh = val.Value;
   if (!rfh)
     return v8::Null(isolate);
 
