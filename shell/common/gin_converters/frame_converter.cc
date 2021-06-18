@@ -67,8 +67,15 @@ bool Converter<gin_helper::AccessorValue<content::RenderFrameHost*>>::FromV8(
 
   DCHECK_EQ(rfh_obj->InternalFieldCount(), 2);
 
-  const int process_id = rfh_obj->GetInternalField(0).As<v8::Number>()->Value();
-  const int routing_id = rfh_obj->GetInternalField(1).As<v8::Number>()->Value();
+  v8::Local<v8::Value> process_id_wrapper = rfh_obj->GetInternalField(0);
+  v8::Local<v8::Value> routing_id_wrapper = rfh_obj->GetInternalField(1);
+
+  if (process_id_wrapper.IsEmpty() || !process_id_wrapper->IsNumber() ||
+      routing_id_wrapper.IsEmpty() || !routing_id_wrapper->IsNumber())
+    return false;
+
+  const int process_id = process_id_wrapper.As<v8::Number>()->Value();
+  const int routing_id = routing_id_wrapper.As<v8::Number>()->Value();
 
   auto* rfh = content::RenderFrameHost::FromID(process_id, routing_id);
   if (!rfh)
