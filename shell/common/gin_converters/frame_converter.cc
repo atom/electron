@@ -65,7 +65,8 @@ bool Converter<gin_helper::AccessorValue<content::RenderFrameHost*>>::FromV8(
   if (!ConvertFromV8(isolate, val, &rfh_obj))
     return false;
 
-  DCHECK_EQ(rfh_obj->InternalFieldCount(), 2);
+  if (rfh_obj->InternalFieldCount() != 2)
+    return false;
 
   v8::Local<v8::Value> process_id_wrapper = rfh_obj->GetInternalField(0);
   v8::Local<v8::Value> routing_id_wrapper = rfh_obj->GetInternalField(1);
