@@ -4,15 +4,19 @@
 
 #include "shell/browser/extensions/api/tabs/tabs_api.h"
 
+#include <iostream>
 #include <memory>
 #include <utility>
 
+#include "chrome/browser/extensions/api/tabs/tabs_constants.h"
 #include "extensions/browser/extension_api_frame_id_map.h"
 #include "extensions/common/error_utils.h"
 #include "extensions/common/manifest_constants.h"
 #include "extensions/common/mojom/host_id.mojom.h"
 #include "extensions/common/permissions/permissions_data.h"
+#include "shell/browser/api/electron_api_session.h"
 #include "shell/browser/api/electron_api_web_contents.h"
+#include "shell/browser/extensions/extension_tab_util.h"
 #include "shell/browser/web_contents_zoom_controller.h"
 #include "shell/common/extensions/api/tabs.h"
 #include "third_party/blink/public/common/page/page_zoom.h"
@@ -55,6 +59,85 @@ void ZoomModeToZoomSettings(WebContentsZoomController::ZoomMode zoom_mode,
 }
 }  // namespace
 
+electron::api::WebContents* GetActiveTab(ExtensionFunction* function) {
+  auto* session =
+      electron::api::Session::FromBrowserContext(function->browser_context());
+
+  auto* sender_wc =
+      electron::api::WebContents::From(function->GetSenderWebContents());
+  if (!sender_wc)
+    return nullptr;
+
+  auto* web_contents = session->GetActiveTab(sender_wc);
+  if (!web_contents)
+    return nullptr;
+
+  auto tab = session->GetExtensionTabDetails(web_contents);
+  if (!tab)
+    return nullptr;
+
+  return web_contents;
+}
+
+bool GetTabById(int tab_id,
+                ExtensionFunction* function,
+                electron::api::WebContents** contents,
+                electron::api::ExtensionTabDetails* out_tab,
+                std::string* error_message) {
+  auto* web_contents = ExtensionTabUtil::GetWebContentsById(tab_id);
+
+  if (contents)
+    *contents = web_contents;
+
+  auto tab = ExtensionTabUtil::GetTabDetailsFromWebContents(web_contents);
+
+  if (tab) {
+    if (out_tab)
+      *out_tab = tab.value();
+
+    return true;
+  }
+
+  if (error_message) {
+    *error_message = ErrorUtils::FormatErrorMessage(
+        tabs_constants::kTabNotFoundError, base::NumberToString(tab_id));
+  }
+
+  return false;
+}
+
+// Gets the WebContents for |tab_id| if it is specified. Otherwise get the
+// WebContents for the active tab in the |function|'s current window.
+// Returns nullptr and fills |error| if failed.
+electron::api::WebContents* GetTabsAPIDefaultWebContents(
+    ExtensionFunction* function,
+    int tab_id,
+    std::string* error) {
+  electron::api::WebContents* web_contents = nullptr;
+  if (tab_id != -1) {
+    // We assume this call leaves web_contents unchanged if it is unsuccessful.
+    GetTabById(tab_id, function, &web_contents, nullptr, error);
+  } else {
+    web_contents = GetActiveTab(function);
+    if (!web_contents)
+      *error = tabs_constants::kNoSelectedTabError;
+  }
+  return web_contents;
+}
+
+std::unique_ptr<api::tabs::Tab> CreateTabObjectHelper(
+    electron::api::WebContents* contents,
+    electron::api::ExtensionTabDetails tab,
+    const Extension* extension,
+    Feature::Context context,
+    int tab_index) {
+  ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+      ExtensionTabUtil::GetScrubTabBehavior(extension, context,
+                                            contents->web_contents());
+  return ExtensionTabUtil::CreateTabObject(
+      contents->web_contents(), tab, scrub_tab_behavior, extension, tab_index);
+}
+
 ExecuteCodeInTabFunction::ExecuteCodeInTabFunction() : execute_tab_id_(-1) {}
 
 ExecuteCodeInTabFunction::~ExecuteCodeInTabFunction() = default;
@@ -77,10 +160,11 @@ ExecuteCodeFunction::InitResult ExecuteCodeInTabFunction::Init() {
     return set_init_result(VALIDATION_FAILURE);
 
   if (tab_id == -1) {
-    // There's no useful concept of a "default tab" in Electron.
-    // TODO(nornagon): we could potentially kick this to an event to allow the
-    // app to decide what "default tab" means for them?
-    return set_init_result(VALIDATION_FAILURE);
+    electron::api::WebContents* web_contents = GetActiveTab(this);
+    if (!web_contents)
+      return set_init_result_error(tabs_constants::kNoTabInBrowserWindowError);
+
+    tab_id = web_contents->ID();
   }
 
   execute_tab_id_ = tab_id;
@@ -91,11 +175,11 @@ ExecuteCodeFunction::InitResult ExecuteCodeInTabFunction::Init() {
 }
 
 bool ExecuteCodeInTabFunction::CanExecuteScriptOnPage(std::string* error) {
+  electron::api::WebContents* contents = nullptr;
   // If |tab_id| is specified, look for the tab. Otherwise default to selected
   // tab in the current window.
   CHECK_GE(execute_tab_id_, 0);
-  auto* contents = electron::api::WebContents::FromID(execute_tab_id_);
-  if (!contents) {
+  if (!GetTabById(execute_tab_id_, this, &contents, nullptr, error)) {
     return false;
   }
 
@@ -147,10 +231,23 @@ bool ExecuteCodeInTabFunction::CanExecuteScriptOnPage(std::string* error) {
 
 ScriptExecutor* ExecuteCodeInTabFunction::GetScriptExecutor(
     std::string* error) {
-  auto* contents = electron::api::WebContents::FromID(execute_tab_id_);
-  if (!contents)
+  electron::api::WebContents* contents = nullptr;
+
+  bool success =
+      GetTabById(execute_tab_id_, this, &contents, nullptr, error) && contents;
+
+  if (!success)
     return nullptr;
+
   return contents->script_executor();
+}
+
+bool ExecuteCodeInTabFunction::ShouldInsertCSS() const {
+  return false;
+}
+
+bool ExecuteCodeInTabFunction::ShouldRemoveCSS() const {
+  return false;
 }
 
 bool ExecuteCodeInTabFunction::IsWebView() const {
@@ -161,12 +258,12 @@ const GURL& ExecuteCodeInTabFunction::GetWebViewSrc() const {
   return GURL::EmptyGURL();
 }
 
-bool TabsExecuteScriptFunction::ShouldInsertCSS() const {
-  return false;
+bool TabsInsertCSSFunction::ShouldInsertCSS() const {
+  return true;
 }
 
-bool TabsExecuteScriptFunction::ShouldRemoveCSS() const {
-  return false;
+bool TabsRemoveCSSFunction::ShouldRemoveCSS() const {
+  return true;
 }
 
 ExtensionFunction::ResponseAction TabsGetFunction::Run() {
@@ -174,20 +271,16 @@ ExtensionFunction::ResponseAction TabsGetFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(params.get());
   int tab_id = params->tab_id;
 
-  auto* contents = electron::api::WebContents::FromID(tab_id);
-  if (!contents)
-    return RespondNow(Error("No such tab"));
+  electron::api::WebContents* contents = nullptr;
+  electron::api::ExtensionTabDetails tab;
+  std::string error;
+  if (!GetTabById(tab_id, this, &contents, &tab, &error)) {
+    return RespondNow(Error(std::move(error)));
+  }
 
-  tabs::Tab tab;
-
-  tab.id = std::make_unique<int>(tab_id);
-  // TODO(nornagon): in Chrome, the tab URL is only available to extensions
-  // that have the "tabs" (or "activeTab") permission. We should do the same
-  // permission check here.
-  tab.url = std::make_unique<std::string>(
-      contents->web_contents()->GetLastCommittedURL().spec());
-
-  return RespondNow(ArgumentList(tabs::Get::Results::Create(std::move(tab))));
+  return RespondNow(
+      ArgumentList(tabs::Get::Results::Create(*CreateTabObjectHelper(
+          contents, tab, extension(), source_context_type(), 0))));
 }
 
 ExtensionFunction::ResponseAction TabsSetZoomFunction::Run() {
@@ -196,13 +289,13 @@ ExtensionFunction::ResponseAction TabsSetZoomFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(params);
 
   int tab_id = params->tab_id ? *params->tab_id : -1;
-  auto* contents = electron::api::WebContents::FromID(tab_id);
+  std::string error;
+  auto* contents = GetTabsAPIDefaultWebContents(this, tab_id, &error);
   if (!contents)
-    return RespondNow(Error("No such tab"));
+    return RespondNow(Error(std::move(error)));
 
   auto* web_contents = contents->web_contents();
   GURL url(web_contents->GetVisibleURL());
-  std::string error;
   if (extension()->permissions_data()->IsRestrictedUrl(url, &error))
     return RespondNow(Error(error));
 
@@ -224,9 +317,10 @@ ExtensionFunction::ResponseAction TabsGetZoomFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(params);
 
   int tab_id = params->tab_id ? *params->tab_id : -1;
-  auto* contents = electron::api::WebContents::FromID(tab_id);
+  std::string error;
+  auto* contents = GetTabsAPIDefaultWebContents(this, tab_id, &error);
   if (!contents)
-    return RespondNow(Error("No such tab"));
+    return RespondNow(Error(std::move(error)));
 
   double zoom_level = contents->GetZoomController()->GetZoomLevel();
   double zoom_factor = blink::PageZoomLevelToZoomFactor(zoom_level);
@@ -240,9 +334,10 @@ ExtensionFunction::ResponseAction TabsGetZoomSettingsFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(params);
 
   int tab_id = params->tab_id ? *params->tab_id : -1;
-  auto* contents = electron::api::WebContents::FromID(tab_id);
+  std::string error;
+  auto* contents = GetTabsAPIDefaultWebContents(this, tab_id, &error);
   if (!contents)
-    return RespondNow(Error("No such tab"));
+    return RespondNow(Error(std::move(error)));
 
   auto* zoom_controller = contents->GetZoomController();
   WebContentsZoomController::ZoomMode zoom_mode =
@@ -264,11 +359,11 @@ ExtensionFunction::ResponseAction TabsSetZoomSettingsFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(params);
 
   int tab_id = params->tab_id ? *params->tab_id : -1;
-  auto* contents = electron::api::WebContents::FromID(tab_id);
-  if (!contents)
-    return RespondNow(Error("No such tab"));
-
   std::string error;
+  auto* contents = GetTabsAPIDefaultWebContents(this, tab_id, &error);
+  if (!contents)
+    return RespondNow(Error(std::move(error)));
+
   GURL url(contents->web_contents()->GetVisibleURL());
   if (extension()->permissions_data()->IsRestrictedUrl(url, &error))
     return RespondNow(Error(error));

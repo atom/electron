@@ -35,6 +35,8 @@
 #include "extensions/common/manifest_url_handlers.h"
 #include "net/base/mime_util.h"
 #include "services/network/public/mojom/url_loader.mojom.h"
+#include "shell/browser/api/electron_api_session.h"
+#include "shell/browser/api/electron_api_web_contents.h"
 #include "shell/browser/browser.h"
 #include "shell/browser/electron_browser_client.h"
 #include "shell/browser/electron_browser_context.h"
@@ -48,6 +50,7 @@
 #include "shell/browser/extensions/electron_kiosk_delegate.h"
 #include "shell/browser/extensions/electron_navigation_ui_data.h"
 #include "shell/browser/extensions/electron_process_manager_delegate.h"
+#include "shell/browser/extensions/extension_tab_util.h"
 #include "ui/base/resource/resource_bundle.h"
 
 using content::BrowserContext;
@@ -371,6 +374,27 @@ void ElectronExtensionsBrowserClient::RegisterBrowserInterfaceBindersForFrame(
     content::RenderFrameHost* render_frame_host,
     const extensions::Extension* extension) const {
   PopulateExtensionFrameBinders(map, render_frame_host, extension);
+}
+
+void ElectronExtensionsBrowserClient::GetTabAndWindowIdForWebContents(
+    content::WebContents* web_contents,
+    int* tab_id,
+    int* window_id) {
+  api::WebContents* api_wc = api::WebContents::From(web_contents);
+  if (api_wc) {
+    int32_t wc_id = api_wc->ID();
+    // NB. the following line can invoke JS, which could destroy the
+    // WebContents.
+    absl::optional<api::ExtensionTabDetails> tab =
+        extensions::ExtensionTabUtil::GetTabDetailsFromWebContents(api_wc);
+    if (tab) {
+      *tab_id = wc_id;
+      *window_id = tab->window_id;
+      return;
+    }
+  }
+  *tab_id = -1;
+  *window_id = -1;
 }
 
 }  // namespace electron

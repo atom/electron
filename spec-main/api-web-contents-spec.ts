@@ -305,6 +305,35 @@ describe('webContents module', () => {
     });
   });
 
+  describe('webContents.getExtensionTabDetails', () => {
+    let w: BrowserWindow;
+
+    before(async () => {
+      w = new BrowserWindow({ show: false, webPreferences: { contextIsolation: true, sandbox: true } });
+      await w.loadURL('about:blank');
+    });
+
+    after(() => {
+      session.defaultSession.setExtensionAPIHandlers({
+        getTab: null
+      });
+    });
+
+    after(closeAllWindows);
+
+    it('returns correct chrome tab details', async () => {
+      session.defaultSession.setExtensionAPIHandlers({
+        getTab: () => {
+          return {
+            windowId: w.id
+          };
+        }
+      });
+      const details = w.webContents.getExtensionTabDetails();
+      expect(details?.url).to.equal('about:blank');
+    });
+  });
+
   describe('loadURL() promise API', () => {
     let w: BrowserWindow;
     beforeEach(async () => {

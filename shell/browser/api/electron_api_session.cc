@@ -52,6 +52,7 @@
 #include "shell/browser/api/electron_api_net_log.h"
 #include "shell/browser/api/electron_api_protocol.h"
 #include "shell/browser/api/electron_api_service_worker_context.h"
+#include "shell/browser/api/electron_api_web_contents.h"
 #include "shell/browser/api/electron_api_web_request.h"
 #include "shell/browser/browser.h"
 #include "shell/browser/electron_browser_context.h"
@@ -247,6 +248,13 @@ struct Converter<network::mojom::SSLConfigPtr> {
 namespace electron {
 
 namespace api {
+
+#if BUILDFLAG(ENABLE_ELECTRON_EXTENSIONS)
+ExtensionTabDetails::ExtensionTabDetails() = default;
+ExtensionTabDetails::ExtensionTabDetails(const ExtensionTabDetails& other) =
+    default;
+ExtensionTabDetails::~ExtensionTabDetails() = default;
+#endif
 
 namespace {
 
@@ -867,6 +875,89 @@ void Session::OnExtensionReady(content::BrowserContext* browser_context,
                                const extensions::Extension* extension) {
   Emit("extension-ready", extension);
 }
+
+void Session::SetExtensionAPIHandlers(const gin_helper::Dictionary& api,
+                                      gin::Arguments* args) {
+  v8::Local<v8::Value> value;
+  GetTabHandler get_tab_handler;
+  bool set_get_tab_handler = false;
+  GetActiveTabHandler get_active_tab_handler;
+  bool set_get_active_tab_handler = false;
+
+  if (api.Get("getTab", &value)) {
+    if (value->IsNull() ||
+        gin::ConvertFromV8(args->isolate(), value, &get_tab_handler)) {
+      set_get_tab_handler = true;
+    } else {
+      args->ThrowTypeError("getTab must be a function or null.");
+      return;
+    }
+  }
+
+  if (api.Get("getActiveTab", &value)) {
+    if (value->IsNull() ||
+        gin::ConvertFromV8(args->isolate(), value, &get_active_tab_handler)) {
+      set_get_active_tab_handler = true;
+    } else {
+      args->ThrowTypeError("getActiveTab must be a function or null.");
+      return;
+    }
+  }
+
+  if (set_get_tab_handler)
+    get_tab_handler_ = std::move(get_tab_handler);
+  if (set_get_active_tab_handler)
+    get_active_tab_handler_ = std::move(get_active_tab_handler);
+}
+
+absl::optional<ExtensionTabDetails> Session::GetExtensionTabDetails(
+    WebContents* tab_contents) {
+  v8::Isolate* isolate = JavascriptEnvironment::GetIsolate();
+  v8::HandleScope scope(isolate);
+
+  ExtensionTabDetails details;
+
+  if (!get_tab_handler_) {
+    if (!has_emitted_chrome_tabs_get_warning_) {
+      EmitWarning(
+          node::Environment::GetCurrent(isolate),
+          "No handler has been registered for `chrome.tabs.get`. Please use "
+          "`session.setExtensionAPIHandlers`.",
+          "electron");
+      has_emitted_chrome_tabs_get_warning_ = true;
+    }
+
+    return absl::make_optional<ExtensionTabDetails>(details);
+  }
+
+  v8::Local<v8::Value> value = get_tab_handler_.Run(tab_contents);
+
+  if (value->IsObject() && gin::ConvertFromV8(isolate, value, &details)) {
+    return absl::make_optional<ExtensionTabDetails>(details);
+  }
+
+  return absl::nullopt;
+}
+
+WebContents* Session::GetActiveTab(WebContents* sender_contents) {
+  v8::Isolate* isolate = JavascriptEnvironment::GetIsolate();
+  v8::HandleScope scope(isolate);
+
+  if (!get_active_tab_handler_) {
+    if (!has_emitted_active_tab_warning_) {
+      EmitWarning(
+          node::Environment::GetCurrent(isolate),
+          "Active tab has been requested by an extension, but no handler "
+          "has been registered. Please use "
+          "`session.setExtensionAPIHandlers`.",
+          "electron");
+      has_emitted_active_tab_warning_ = true;
+    }
+    return nullptr;
+  }
+
+  return get_active_tab_handler_.Run(sender_contents);
+}
 #endif
 
 v8::Local<v8::Value> Session::Cookies(v8::Isolate* isolate) {
@@ -1097,8 +1188,9 @@ gin::Handle<Session> Session::CreateFrom(
   auto handle =
       gin::CreateHandle(isolate, new Session(isolate, browser_context));
 
-  // The Sessions should never be garbage collected, since the common pattern is
-  // to use partition strings, instead of using the Session object directly.
+  // The Sessions should never be garbage collected, since the common pattern
+  // is to use partition strings, instead of using the Session object
+  // directly.
   handle->Pin(isolate);
 
   App::Get()->EmitCustomEvent("session-created",
@@ -1165,6 +1257,7 @@ gin::ObjectTemplateBuilder Session::GetObjectTemplateBuilder(
       .SetMethod("removeExtension", &Session::RemoveExtension)
       .SetMethod("getExtension", &Session::GetExtension)
       .SetMethod("getAllExtensions", &Session::GetAllExtensions)
+      .SetMethod("setExtensionAPIHandlers", &Session::SetExtensionAPIHandlers)
 #endif
 #if BUILDFLAG(ENABLE_BUILTIN_SPELLCHECKER)
       .SetMethod("getSpellCheckerLanguages", &Session::GetSpellCheckerLanguages)

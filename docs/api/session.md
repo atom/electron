@@ -818,6 +818,49 @@ Returns `Extension[]` - A list of all loaded extensions.
 **Note:** This API cannot be called before the `ready` event of the `app` module
 is emitted.
 
+#### `ses.setExtensionAPIHandlers(handlers)`
+
+* `handlers` Object
+  * `getTab` Function<[TabDetails](structures/tab-details.md) | null> | null (optional)
+    * `webContents` [WebContents](web-contents.md) - the `webContents` of a tab that has been requested.
+  * `getActiveTab` Function<[WebContents](web-contents.md) | null> | null (optional)
+    * `sender` [WebContents](web-contents.md) - the `webContents` from which the active tab request originated.
+
+Tells the Chrome API what to do when an extension requests a tab via i.e. `chrome.tabs.get` and how to handle "active" tab requests (i.e. `chrome.tabs.executeScript` without `tabId` parameter defaults to the active tab).
+
+Successive calls will only overwrite specified handlers. Passing `null` will reset a handler.
+
+```javascript
+const { session, webContents } = require('electron')
+
+app.whenReady().then(async () => {
+  const ses = session.fromPartition('some-partition')
+
+  ses.setExtensionAPIHandlers({
+    getTab: (webContents) => {
+      return {
+        groupId: 1,
+        windowId: 1,
+        pinned: false,
+        active: true
+      }
+    }
+  })
+
+  // |getTab| does not get replaced.
+  ses.setExtensionAPIHandlers({
+    getActiveTab: (sender) => {
+      return webContents.fromId(1)
+    }
+  })
+
+  // Unregisters |getTab|.
+  ses.setExtensionAPIHandlers({
+    getTab: null
+  })
+})
+```
+
 #### `ses.getStoragePath()`
 
 A `String | null` indicating the absolute file system path where data for this

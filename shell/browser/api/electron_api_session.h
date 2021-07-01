@@ -55,6 +55,28 @@ class ElectronBrowserContext;
 
 namespace api {
 
+class WebContents;
+
+#if BUILDFLAG(ENABLE_ELECTRON_EXTENSIONS)
+struct ExtensionTabDetails {
+  ExtensionTabDetails();
+  ExtensionTabDetails(const ExtensionTabDetails& other);
+  ~ExtensionTabDetails();
+
+  int window_id = 0;
+  int index = -1;
+  int group_id = -1;
+  int opener_tab_id = 0;
+  bool active = false;
+  bool highlighted = false;
+  bool pinned = false;
+  bool discarded = false;
+  bool auto_discardable = false;
+  std::string muted_reason;
+  std::string muted_extension_id;
+};
+#endif
+
 class Session : public gin::Wrappable<Session>,
                 public gin_helper::Pinnable<Session>,
                 public gin_helper::EventEmitterMixin<Session>,
@@ -151,6 +173,12 @@ class Session : public gin::Wrappable<Session>,
   void OnExtensionUnloaded(content::BrowserContext* browser_context,
                            const extensions::Extension* extension,
                            extensions::UnloadedExtensionReason reason) override;
+
+  void SetExtensionAPIHandlers(const gin_helper::Dictionary& api,
+                               gin::Arguments* args);
+  absl::optional<ExtensionTabDetails> GetExtensionTabDetails(
+      WebContents* tab_contents);
+  WebContents* GetActiveTab(WebContents* sender_contents);
 #endif
 
  protected:
@@ -178,6 +206,19 @@ class Session : public gin::Wrappable<Session>,
   v8::Global<v8::Value> net_log_;
   v8::Global<v8::Value> service_worker_context_;
   v8::Global<v8::Value> web_request_;
+
+#if BUILDFLAG(ENABLE_ELECTRON_EXTENSIONS)
+  bool has_emitted_chrome_tabs_get_warning_ = false;
+  bool has_emitted_active_tab_warning_ = false;
+
+  using GetTabHandler =
+      base::RepeatingCallback<v8::Local<v8::Value>(WebContents*)>;
+  using GetActiveTabHandler =
+      base::RepeatingCallback<WebContents*(WebContents*)>;
+
+  GetTabHandler get_tab_handler_;
+  GetActiveTabHandler get_active_tab_handler_;
+#endif
 
   v8::Isolate* isolate_;
 
