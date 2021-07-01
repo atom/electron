@@ -720,6 +720,9 @@ WebContents::WebContents(v8::Isolate* isolate,
   }
   session_.Reset(isolate, session.ToV8());
 
+  std::string main_frame_name;
+  options.Get("mainFrameName", &main_frame_name);
+
   std::unique_ptr<content::WebContents> web_contents;
   if (IsGuest()) {
     scoped_refptr<content::SiteInstance> site_instance =
@@ -730,6 +733,7 @@ WebContents::WebContents(v8::Isolate* isolate,
     guest_delegate_ =
         std::make_unique<WebViewGuestDelegate>(embedder_->web_contents(), this);
     params.guest_delegate = guest_delegate_.get();
+    params.main_frame_name = main_frame_name;
 
 #if BUILDFLAG(ENABLE_OSR)
     if (embedder_ && embedder_->IsOffScreen()) {
@@ -738,6 +742,7 @@ WebContents::WebContents(v8::Isolate* isolate,
           base::BindRepeating(&WebContents::OnPaint, base::Unretained(this)));
       params.view = view;
       params.delegate_view = view;
+      params.main_frame_name = main_frame_name;
 
       web_contents = content::WebContents::Create(params);
       view->SetWebContents(web_contents.get());
@@ -756,6 +761,7 @@ WebContents::WebContents(v8::Isolate* isolate,
         base::BindRepeating(&WebContents::OnPaint, base::Unretained(this)));
     params.view = view;
     params.delegate_view = view;
+    params.main_frame_name = main_frame_name;
 
     web_contents = content::WebContents::Create(params);
     view->SetWebContents(web_contents.get());
@@ -763,6 +769,7 @@ WebContents::WebContents(v8::Isolate* isolate,
   } else {
     content::WebContents::CreateParams params(session->browser_context());
     params.initially_hidden = !initially_shown;
+    params.main_frame_name = main_frame_name;
     web_contents = content::WebContents::Create(params);
   }
 
