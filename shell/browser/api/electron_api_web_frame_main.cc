@@ -213,10 +213,6 @@ void WebFrameMain::PostMessage(v8::Isolate* isolate,
                                        std::move(transferable_message));
 }
 
-bool WebFrameMain::IsDestroyed() const {
-  return render_frame_disposed_;
-}
-
 int WebFrameMain::FrameTreeNodeID() const {
   if (!CheckRenderFrame())
     return -1;
@@ -307,7 +303,6 @@ void WebFrameMain::Connect() {
 
 void WebFrameMain::OnDeleted() {
   MarkRenderFrameDisposed();
-  Emit("destroyed");
 }
 
 void WebFrameMain::DOMContentLoaded() {
@@ -354,7 +349,6 @@ v8::Local<v8::ObjectTemplate> WebFrameMain::FillObjectTemplate(
       .SetMethod("reload", &WebFrameMain::Reload)
       .SetMethod("_send", &WebFrameMain::Send)
       .SetMethod("_postMessage", &WebFrameMain::PostMessage)
-      .SetMethod("isDestroyed", &WebFrameMain::IsDestroyed)
       .SetProperty("frameTreeNodeId", &WebFrameMain::FrameTreeNodeID)
       .SetProperty("name", &WebFrameMain::Name)
       .SetProperty("osProcessId", &WebFrameMain::OSProcessID)

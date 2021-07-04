@@ -91,8 +91,6 @@ class WebFrameMain : public gin::Wrappable<WebFrameMain>,
                    v8::Local<v8::Value> message_value,
                    absl::optional<v8::Local<v8::Value>> transfer);
 
-  bool IsDestroyed() const;
-
   int FrameTreeNodeID() const;
   std::string Name() const;
   base::ProcessId OSProcessID() const;

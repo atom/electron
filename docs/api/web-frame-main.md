@@ -73,21 +73,6 @@ _This class is not exported from the `'electron'` module. It is only available a
 
 ### Instance Events
 
-#### Event: 'destroyed'
-
-Returns:
-
-* `event` Event
-
-Emitted when the frame has been destroyed.
-
-This can occur for a variety of reasons:
-
-* If the frame is an `<iframe>`, when its DOM node is removed.
-* When navigating away the page containing the frame.
-* When the parent `WebContents` is destroyed.
-* When the parent `BrowserWindow` is destroyed.
-
 #### Event: 'dom-ready'
 
 Returns:
@@ -97,10 +82,6 @@ Returns:
 Emitted when the document is loaded.
 
 ### Instance Methods
-
-#### `frame.isDestroyed()`
-
-Returns `boolean` - Whether the frame is destroyed.
 
 #### `frame.executeJavaScript(code[, userGesture])`
 
