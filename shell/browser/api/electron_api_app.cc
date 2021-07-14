@@ -33,6 +33,7 @@
 #include "net/ssl/client_cert_identity.h"
 #include "net/ssl/ssl_cert_request_info.h"
 #include "sandbox/policy/switches.h"
+#include "shell/app/electron_default_paths.h"
 #include "shell/browser/api/electron_api_menu.h"
 #include "shell/browser/api/electron_api_session.h"
 #include "shell/browser/api/electron_api_web_contents.h"
@@ -923,30 +924,21 @@ void App::SetAppPath(const base::FilePath& app_path) {
   app_path_ = app_path;
 }
 
-#if !defined(OS_MAC)
 void App::SetAppLogsPath(gin_helper::ErrorThrower thrower,
                          absl::optional<base::FilePath> custom_path) {
+  base::FilePath logs_path;
   if (custom_path.has_value()) {
     if (!custom_path->IsAbsolute()) {
       thrower.ThrowError("Path must be absolute");
       return;
     }
-    {
-      base::ThreadRestrictions::ScopedAllowIO allow_io;
-      base::PathService::Override(DIR_APP_LOGS, custom_path.value());
-    }
+    logs_path = custom_path.value();
   } else {
-    base::FilePath path;
-    if (base::PathService::Get(chrome::DIR_USER_DATA, &path)) {
-      path = path.Append(base::FilePath::FromUTF8Unsafe("logs"));
-      {
-        base::ThreadRestrictions::ScopedAllowIO allow_io;
-        base::PathService::Override(DIR_APP_LOGS, path);
-      }
-    }
+    ElectronDefaultPaths::GetDefault(DIR_APP_LOGS, &logs_path);
   }
+  base::ThreadRestrictions::ScopedAllowIO allow_io;
+  base::PathService::Override(DIR_APP_LOGS, logs_path);
 }
-#endif
 
 // static
 bool App::IsPackaged() {
@@ -965,7 +957,6 @@ bool App::IsPackaged() {
   return base_name != FILE_PATH_LITERAL("electron");
 #endif
 }
-
 base::FilePath App::GetPath(gin_helper::ErrorThrower thrower,
                             const std::string& name) {
   base::FilePath path;

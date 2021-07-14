@@ -155,6 +155,13 @@ std::string Browser::GetName() const {
 
 void Browser::SetName(const std::string& name) {
   OverrideApplicationName(name);
+
+  // Some of the paths in `app.getPath()` are based on `name` and should
+  // update when `name` is changed before `app.ready` is fired. So if app
+  // isn't ready yet, invalidate the PathService cache to ensure a refresh.
+  if (!is_ready()) {
+    base::PathService::InvalidateCache();
+  }
 }
 
 int Browser::GetBadgeCount() {
@@ -187,9 +194,24 @@ void Browser::WillFinishLaunching() {
 void Browser::DidFinishLaunching(base::DictionaryValue launch_info) {
   // Make sure the userData directory is created.
   base::ThreadRestrictions::ScopedAllowIO allow_io;
+
+  // 'userData' (DIR_USER_DATA) and 'userCache' (DIR_USER_CACHE) can
+  // be customized by the user up until the `ready` event is fired.
+  // Now that we've reached that point, it's time to freeze their values.
+  // FIXME: setPath() should reject changes to these paths after this point
   base::FilePath user_data;
-  if (base::PathService::Get(chrome::DIR_USER_DATA, &user_data))
-    base::CreateDirectoryAndGetError(user_data, nullptr);
+  base::PathService::Get(DIR_USER_DATA, &user_data);
+  base::PathService::Override(DIR_USER_DATA, user_data);
+  base::PathService::Override(chrome::DIR_USER_DATA, user_data);
+  base::CreateDirectoryAndGetError(user_data, nullptr);
+
+  base::FilePath user_cache;
+  base::PathService::Get(DIR_USER_CACHE, &user_cache);
+  base::PathService::Override(DIR_USER_CACHE, user_cache);
+
+  base::PathService::Override(
+      chrome::DIR_APP_DICTIONARIES,
+      user_data.Append(base::FilePath::FromUTF8Unsafe("Dictionaries")));
 
   is_ready_ = true;
   if (ready_promise_) {

@@ -17,32 +17,6 @@ namespace electron {
 
 namespace api {
 
-void App::SetAppLogsPath(gin_helper::ErrorThrower thrower,
-                         absl::optional<base::FilePath> custom_path) {
-  if (custom_path.has_value()) {
-    if (!custom_path->IsAbsolute()) {
-      thrower.ThrowError("Path must be absolute");
-      return;
-    }
-    {
-      base::ThreadRestrictions::ScopedAllowIO allow_io;
-      base::PathService::Override(DIR_APP_LOGS, custom_path.value());
-    }
-  } else {
-    NSString* bundle_name =
-        [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleName"];
-    NSString* logs_path =
-        [NSString stringWithFormat:@"Library/Logs/%@", bundle_name];
-    NSString* library_path =
-        [NSHomeDirectory() stringByAppendingPathComponent:logs_path];
-    {
-      base::ThreadRestrictions::ScopedAllowIO allow_io;
-      base::PathService::Override(DIR_APP_LOGS,
-                                  base::FilePath([library_path UTF8String]));
-    }
-  }
-}
-
 void App::SetActivationPolicy(gin_helper::ErrorThrower thrower,
                               const std::string& policy) {
   NSApplicationActivationPolicy activation_policy;

@@ -26,6 +26,7 @@
 #include "sandbox/policy/switches.h"
 #include "services/tracing/public/cpp/stack_sampling/tracing_sampler_profiler.h"
 #include "shell/app/electron_content_client.h"
+#include "shell/app/electron_default_paths.h"
 #include "shell/browser/electron_browser_client.h"
 #include "shell/browser/electron_gpu_client.h"
 #include "shell/browser/feature_list.h"
@@ -200,10 +201,9 @@ bool ElectronPathProvider(int key, base::FilePath* result) {
 
   return true;
 }
-
 void RegisterPathProvider() {
-  base::PathService::RegisterProvider(ElectronPathProvider, PATH_START,
-                                      PATH_END);
+  base::PathService::RegisterProvider(ElectronDefaultPaths::GetDefault,
+                                      PATH_START, PATH_END);
 }
 
 }  // namespace
