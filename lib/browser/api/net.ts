@@ -440,9 +440,7 @@ export class ClientRequest extends Writable implements Electron.ClientRequest {
       if (this._response) { this._response._storeInternalData(null, null); }
     });
     this._urlLoader.on('error', (event, netErrorString) => {
-      const error = new Error(netErrorString);
-      if (this._response) this._response.destroy(error);
-      this._die(error);
+      this._die(new Error(netErrorString));
     });
 
     this._urlLoader.on('login', (event, authInfo, callback) => {
@@ -523,7 +521,7 @@ export class ClientRequest extends Writable implements Electron.ClientRequest {
     this.destroy(err);
     if (this._urlLoader) {
       this._urlLoader.cancel();
-      if (this._response) this._response.destroy(err);
+      if (this._response) this._response.destroy();
     }
   }
 
