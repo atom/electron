@@ -439,14 +439,21 @@ std::u16string GetDefaultPrinterAsync() {
       printing::PrintBackend::CreateInstance(
           g_browser_process->GetApplicationLocale());
   std::string printer_name;
-  print_backend->GetDefaultPrinterName(printer_name);
+  printing::mojom::ResultCode code =
+      print_backend->GetDefaultPrinterName(printer_name);
+  if (code != printing::mojom::ResultCode::kSuccess) {
+    LOG(INFO) << "Failed to get default printer name";
+  }
 
   // Some devices won't have a default printer, so we should
   // also check for existing printers and pick the first
   // one should it exist.
   if (printer_name.empty()) {
     printing::PrinterList printers;
-    print_backend->EnumeratePrinters(&printers);
+    printing::mojom::ResultCode code =
+        print_backend->EnumeratePrinters(&printers);
+    if (code != printing::mojom::ResultCode::kSuccess)
+      LOG(INFO) << "Failed to enumerate printers";
     if (!printers.empty())
       printer_name = printers.front().printer_name;
   }
