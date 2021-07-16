@@ -582,6 +582,10 @@ class WebContents : public gin::Wrappable<WebContents>,
       mojo::ScopedMessagePipeHandle* interface_pipe) override;
   void OnCursorChanged(const content::WebCursor& cursor) override;
   void DidAcquireFullscreen(content::RenderFrameHost* rfh) override;
+  void OnWebContentsFocused(
+      content::RenderWidgetHost* render_widget_host) override;
+  void OnWebContentsLostFocus(
+      content::RenderWidgetHost* render_widget_host) override;
 
   // InspectableWebContentsDelegate:
   void DevToolsReloadPage() override;
