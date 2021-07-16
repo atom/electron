@@ -15,6 +15,7 @@
 #include "base/process/process_metrics_iocounters.h"
 #include "base/system/sys_info.h"
 #include "base/threading/thread_restrictions.h"
+#include "base/win/windows_version.h"
 #include "chrome/common/chrome_version.h"
 #include "electron/electron_version.h"
 #include "services/resource_coordinator/public/cpp/memory_instrumentation/global_memory_dump.h"
@@ -52,6 +53,7 @@ void ElectronBindings::BindProcess(v8::Isolate* isolate,
   process->SetMethod("getBlinkMemoryInfo", &GetBlinkMemoryInfo);
   process->SetMethod("getProcessMemoryInfo", &GetProcessMemoryInfo);
   process->SetMethod("getSystemMemoryInfo", &GetSystemMemoryInfo);
+  process->SetMethod("getSystemProductType", &GetSystemProductType);
   process->SetMethod("getSystemVersion",
                      &base::SysInfo::OperatingSystemVersion);
   process->SetMethod("getIOCounters", &GetIOCounters);
@@ -202,6 +204,22 @@ v8::Local<v8::Value> ElectronBindings::GetSystemMemoryInfo(
 #endif
 
   return dict.GetHandle();
+}
+
+// static
+v8::Local<v8::Value> ElectronBindings::GetSystemProductType(
+    v8::Isolate* isolate) {
+  std::string type = "desktop";
+
+// TODO(erickzhao): implement the equivalent API in Linux
+#if defined(OS_WIN)
+  auto* os_info = base::win::OSInfo::GetInstance();
+  if (os_info->version_type() == base::win::SUITE_SERVER) {
+    type = "server";
+  }
+#endif
+
+  return v8::String::NewFromUtf8(isolate, type.c_str()).ToLocalChecked();
 }
 
 // static
