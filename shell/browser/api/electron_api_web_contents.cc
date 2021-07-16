@@ -1392,13 +1392,21 @@ void WebContents::HandleNewRenderFrame(
       static_cast<content::RenderWidgetHostImpl*>(rwhv->GetRenderWidgetHost());
   if (rwh_impl)
     rwh_impl->disable_hidden_ = !background_throttling_;
-
-  WebFrameMain::RenderFrameCreated(render_frame_host);
 }
 
 void WebContents::RenderFrameCreated(
     content::RenderFrameHost* render_frame_host) {
   HandleNewRenderFrame(render_frame_host);
+
+  auto* web_frame = WebFrameMain::From(render_frame_host);
+  if (web_frame)
+    web_frame->Connect();
+
+  v8::Isolate* isolate = JavascriptEnvironment::GetIsolate();
+  v8::HandleScope handle_scope(isolate);
+  gin_helper::Dictionary details = gin_helper::Dictionary::CreateEmpty(isolate);
+  details.SetGetter("frame", render_frame_host);
+  Emit("frame-created", details);
 }
 
 void WebContents::RenderViewDeleted(content::RenderViewHost* render_view_host) {
@@ -1477,6 +1485,10 @@ void WebContents::DidAcquireFullscreen(content::RenderFrameHost* rfh) {
 
 void WebContents::DOMContentLoaded(
     content::RenderFrameHost* render_frame_host) {
+  auto* web_frame = WebFrameMain::From(render_frame_host);
+  if (web_frame)
+    web_frame->DOMContentLoaded();
+
   if (!render_frame_host->GetParent())
     Emit("dom-ready");
 }
@@ -1645,7 +1657,9 @@ void WebContents::RenderFrameDeleted(
     content::RenderFrameHost* render_frame_host) {
   // A WebFrameMain can outlive its RenderFrameHost so we need to mark it as
   // disposed to prevent access to it.
-  WebFrameMain::RenderFrameDeleted(render_frame_host);
+  auto* web_frame = WebFrameMain::From(render_frame_host);
+  if (web_frame)
+    web_frame->OnDeleted();
 }
 
 void WebContents::DidStartNavigation(
