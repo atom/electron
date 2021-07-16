@@ -111,6 +111,10 @@ views::View* InspectableWebContentsViewViews::GetWebView() {
   return contents_web_view_;
 }
 
+void InspectableWebContentsViewViews::UpdateLayout() {
+  Layout();
+}
+
 void InspectableWebContentsViewViews::ShowDevTools(bool activate) {
   if (devtools_visible_)
     return;

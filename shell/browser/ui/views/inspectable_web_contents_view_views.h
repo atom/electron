@@ -41,6 +41,8 @@ class InspectableWebContentsViewViews : public InspectableWebContentsView,
       const DevToolsContentsResizingStrategy& strategy) override;
   void SetTitle(const std::u16string& title) override;
 
+  void UpdateLayout() override;
+
   InspectableWebContents* inspectable_web_contents() {
     return inspectable_web_contents_;
   }

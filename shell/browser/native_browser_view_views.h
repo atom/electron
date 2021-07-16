@@ -33,6 +33,10 @@ class NativeBrowserViewViews : public NativeBrowserView {
   void UpdateDraggableRegions(
       const std::vector<mojom::DraggableRegionPtr>& regions) override;
 
+  // WebContentsObserver:
+  void DidFinishNavigation(
+      content::NavigationHandle* navigation_handle) override;
+
   SkRegion* draggable_region() const { return draggable_region_.get(); }
 
  private:

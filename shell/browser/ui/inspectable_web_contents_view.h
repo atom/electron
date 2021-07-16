@@ -40,6 +40,9 @@ class InspectableWebContentsView {
   // Returns the web view control, which can be used by the
   // GetInitiallyFocusedView() to set initial focus to web view.
   virtual views::View* GetWebView() = 0;
+
+  // Calls Layout() to trigger a paint.
+  virtual void UpdateLayout() = 0;
 #else
   virtual gfx::NativeView GetNativeView() const = 0;
 #endif

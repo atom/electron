@@ -137,6 +137,13 @@ gfx::Rect NativeBrowserViewViews::GetBounds() {
   return iwc_view->GetView()->bounds();
 }
 
+void NativeBrowserViewViews::DidFinishNavigation(
+    content::NavigationHandle* navigation_handle) {
+  if (!GetInspectableWebContentsView())
+    return;
+  GetInspectableWebContentsView()->UpdateLayout();
+}
+
 void NativeBrowserViewViews::SetBackgroundColor(SkColor color) {
   auto* iwc_view = GetInspectableWebContentsView();
   if (!iwc_view)
