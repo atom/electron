@@ -33,6 +33,11 @@ void FramelessView::Init(NativeWindowViews* window, views::Widget* frame) {
 }
 
 int FramelessView::ResizingBorderHitTest(const gfx::Point& point) {
+  return ResizingBorderHitTestImpl(point, kResizeInsideBoundsSize);
+}
+
+int FramelessView::ResizingBorderHitTestImpl(const gfx::Point& point,
+                                             int resize_inside_bounds_size) {
   // Check the frame first, as we allow a small area overlapping the contents
   // to be used for resize handles.
   bool can_ever_resize = frame_->widget_delegate()
@@ -49,7 +54,7 @@ int FramelessView::ResizingBorderHitTest(const gfx::Point& point) {
   // fullscreen, as it can't be resized in those states.
   int resize_border = frame_->IsMaximized() || frame_->IsFullscreen()
                           ? 0
-                          : kResizeInsideBoundsSize;
+                          : resize_inside_bounds_size;
   return GetHTComponentForFrame(point, gfx::Insets(resize_border),
                                 kResizeAreaCornerSize, kResizeAreaCornerSize,
                                 can_ever_resize);

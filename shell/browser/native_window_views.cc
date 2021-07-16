@@ -47,6 +47,7 @@
 #include "base/strings/string_util.h"
 #include "shell/browser/browser.h"
 #include "shell/browser/linux/unity_service.h"
+#include "shell/browser/ui/views/client_frame_view_linux.h"
 #include "shell/browser/ui/views/frameless_view.h"
 #include "shell/browser/ui/views/native_frame_view.h"
 #include "ui/views/widget/desktop_aura/desktop_window_tree_host_linux.h"
@@ -188,9 +189,10 @@ NativeWindowViews::NativeWindowViews(const gin_helper::Dictionary& options,
   params.bounds = bounds;
   params.delegate = this;
   params.type = views::Widget::InitParams::TYPE_WINDOW;
-  params.remove_standard_frame = !has_frame();
+  params.remove_standard_frame = !has_frame() || has_client_frame();
 
-  if (transparent())
+  // If a client frame, we need to draw our own shadows, thus
+  if (transparent() || has_client_frame())
     params.opacity = views::Widget::InitParams::WindowOpacity::kTranslucent;
 
   // The given window is most likely not rectangular since it uses
@@ -217,7 +219,7 @@ NativeWindowViews::NativeWindowViews(const gin_helper::Dictionary& options,
 #endif
 
   widget()->Init(std::move(params));
-#if defined(OS_WIN)
+#if defined(OS_WIN) || defined(OS_LINUX)
   SetCanResize(resizable_);
 #endif
 
@@ -304,7 +306,7 @@ NativeWindowViews::NativeWindowViews(const gin_helper::Dictionary& options,
   ::SetWindowLong(GetAcceleratedWidget(), GWL_EXSTYLE, ex_style);
 #endif
 
-  if (has_frame()) {
+  if (has_frame() && !has_client_frame()) {
     // TODO(zcbenz): This was used to force using native frame on Windows 2003,
     // we should check whether setting it in InitParams can work.
     widget()->set_frame_type(views::Widget::FrameType::kForceNative);
@@ -1530,7 +1532,7 @@ bool NativeWindowViews::ShouldDescendIntoChildForEventHandling(
     return false;
 
   // And the events on border for dragging resizable frameless window.
-  if (!has_frame() && resizable_) {
+  if ((!has_frame() || has_client_frame()) && resizable_) {
     auto* frame =
         static_cast<FramelessView*>(widget()->non_client_view()->frame_view());
     return frame->ResizingBorderHitTest(location) == HTNOWHERE;
@@ -1550,10 +1552,12 @@ NativeWindowViews::CreateNonClientFrameView(views::Widget* widget) {
   frame_view->Init(this, widget);
   return frame_view;
 #else
-  if (has_frame()) {
+  if (has_frame() && !has_client_frame()) {
     return std::make_unique<NativeFrameView>(this, widget);
   } else {
-    auto frame_view = std::make_unique<FramelessView>();
+    auto frame_view = has_frame() && has_client_frame()
+                          ? std::make_unique<ClientFrameViewLinux>()
+                          : std::make_unique<FramelessView>();
     frame_view->Init(this, widget);
     return frame_view;
   }
