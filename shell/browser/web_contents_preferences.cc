@@ -161,7 +161,12 @@ WebContentsPreferences::WebContentsPreferences(
   SetDefaultBoolIfUndefined(options::kNodeIntegrationInWorker, false);
   SetDefaultBoolIfUndefined(options::kDisableHtmlFullscreenWindowResize, false);
   SetDefaultBoolIfUndefined(options::kWebviewTag, false);
-  SetDefaultBoolIfUndefined(options::kSandbox, false);
+  base::FilePath preload_path;
+  bool has_preload = GetPreloadPath(&preload_path);
+  bool sandbox_disabled_by_default =
+      IsEnabled(options::kNodeIntegration) ||
+      IsEnabled(options::kNodeIntegrationInWorker) || has_preload;
+  SetDefaultBoolIfUndefined(options::kSandbox, !sandbox_disabled_by_default);
   SetDefaultBoolIfUndefined(options::kNativeWindowOpen, true);
   SetDefaultBoolIfUndefined(options::kContextIsolation, true);
   SetDefaultBoolIfUndefined(options::kJavaScript, true);
