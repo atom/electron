@@ -18,6 +18,7 @@
 #if defined(OS_WIN)
 #include "base/win/scoped_gdi_object.h"
 #include "shell/browser/ui/win/taskbar_host.h"
+
 #endif
 
 namespace views {
@@ -174,7 +175,26 @@ class NativeWindowViews : public NativeWindow,
   TaskbarHost& taskbar_host() { return taskbar_host_; }
 #endif
 
+#if defined(OS_WIN)
+  enum class TitleBarStyle{
+      kNormal,
+      kHidden,
+  };
+  TitleBarStyle title_bar_style() const { return title_bar_style_; }
+  bool IsWindowControlsOverlayEnabled() const {
+    return (title_bar_style_ == NativeWindowViews::TitleBarStyle::kHidden) &&
+           titlebar_overlay_;
+  }
+  SkColor overlay_color() const { return overlay_color_; }
+  SkColor overlay_symbol_color() const { return overlay_symbol_color_; }
+#endif
+
  private:
+#if defined(OS_WIN)
+  TitleBarStyle title_bar_style_ = TitleBarStyle::kNormal;
+  bool titlebar_overlay_ = false;
+#endif
+
   // views::WidgetObserver:
   void OnWidgetActivationChanged(views::Widget* widget, bool active) override;
   void OnWidgetBoundsChanged(views::Widget* widget,
@@ -292,6 +312,11 @@ class NativeWindowViews : public NativeWindow,
 
   // Whether the window is currently being moved.
   bool is_moving_ = false;
+
+  // The color to use as the theme and symbol colors respectively for Window
+  // Controls Overlay if enabled on Windows.
+  SkColor overlay_color_;
+  SkColor overlay_symbol_color_;
 #endif
 
   // Handles unhandled keyboard messages coming back from the renderer process.

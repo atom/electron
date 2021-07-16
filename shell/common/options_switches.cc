@@ -31,6 +31,11 @@ const char kFullscreen[] = "fullscreen";
 const char kTrafficLightPosition[] = "trafficLightPosition";
 const char kRoundedCorners[] = "roundedCorners";
 
+// The color to use as the theme and symbol colors respectively for Window
+// Controls Overlay if enabled on Windows.
+const char kOverlayColor[] = "overlayColor";
+const char kOverlaySymbolColor[] = "overlaySymbolColor";
+
 // Whether the window should show in taskbar.
 const char kSkipTaskbar[] = "skipTaskbar";
 

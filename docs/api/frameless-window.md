@@ -18,15 +18,17 @@ const win = new BrowserWindow({ width: 800, height: 600, frame: false })
 win.show()
 ```
 
-### Alternatives on macOS
+### Alternatives
 
 There's an alternative way to specify a chromeless window.
 Instead of setting `frame` to `false` which disables both the titlebar and window controls,
 you may want to have the title bar hidden and your content extend to the full window size,
-yet still preserve the window controls ("traffic lights") for standard window actions.
+yet still preserve the window controls ("traffic lights" on macOS) for standard window actions.
 You can do so by specifying the `titleBarStyle` option:
 
-#### `hidden`
+## Alternatives on macOS
+
+### `hidden`
 
 Results in a hidden title bar and a full size content window, yet the title bar still has the standard window controls (“traffic lights”) in the top left.
 
@@ -36,7 +38,7 @@ const win = new BrowserWindow({ titleBarStyle: 'hidden' })
 win.show()
 ```
 
-#### `hiddenInset`
+### `hiddenInset`
 
 Results in a hidden title bar with an alternative look where the traffic light buttons are slightly more inset from the window edge.
 
@@ -46,7 +48,7 @@ const win = new BrowserWindow({ titleBarStyle: 'hiddenInset' })
 win.show()
 ```
 
-#### `customButtonsOnHover`
+### `customButtonsOnHover`
 
 Uses custom drawn close, and miniaturize buttons that display
 when hovering in the top left of the window. The fullscreen button
@@ -63,14 +65,14 @@ win.show()
 
 ## Windows Control Overlay
 
-On macOS, when using a frameless window in conjuction with `win.setWindowButtonVisibility(true)` or using one of the `titleBarStyle`s described above so
-that the traffic lights are visible, you can access the Window Controls Overlay [JavaScript APIs][overlay-javascript-apis] and
+When using a frameless window in conjuction with `win.setWindowButtonVisibility(true)` on macOS, using one of the `titleBarStyle`s as described above so
+that the traffic lights are visible, or using `titleBarStyle: hidden` on Windows, you can access the Window Controls Overlay [JavaScript APIs][overlay-javascript-apis] and
 [CSS Environment Variables][overlay-css-env-vars] by setting the `titleBarOverlay` option to true:
 
 ```javascript
 const { BrowserWindow } = require('electron')
 const win = new BrowserWindow({
-  titleBarStyle: 'hiddenInset',
+  titleBarStyle: 'hidden',
   titleBarOverlay: true
 })
 win.show()
